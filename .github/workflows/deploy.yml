@@ -11,33 +11,13 @@ concurrency:
 
 jobs:
   deploy:
-    name: Build and deploy
+    name: Docker build and deploy
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.1'
-          extensions: mbstring, bcmath, ctype, curl, dom, fileinfo, json, openssl, pdo, tokenizer, xml
-          coverage: none
-
-      - name: Validate composer files
-        run: composer validate --no-check-publish --strict
-
-      - name: Cache Composer packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.composer/cache/files
-          key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
-          restore-keys: ${{ runner.os }}-composer-
-
-      - name: Install PHP dependencies
-        run: composer install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader
 
       - name: Prepare SSH
         env:
@@ -51,7 +31,7 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -p "${VPS_PORT:-22}" "$VPS_HOST" >> ~/.ssh/known_hosts
 
-      - name: Upload release files
+      - name: Upload project files
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
           VPS_USER: ${{ secrets.VPS_USER }}
@@ -67,6 +47,7 @@ jobs:
             --exclude='.github/' \
             --exclude='.env' \
             --exclude='node_modules/' \
+            --exclude='vendor/' \
             --exclude='storage/app/*' \
             --exclude='storage/framework/cache/*' \
             --exclude='storage/framework/sessions/*' \
@@ -74,7 +55,7 @@ jobs:
             --exclude='storage/logs/*' \
             ./ "$VPS_USER@$VPS_HOST:$VPS_DEPLOY_PATH/"
 
-      - name: Run Laravel deploy commands
+      - name: Build and restart Docker services
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
           VPS_USER: ${{ secrets.VPS_USER }}
@@ -83,12 +64,49 @@ jobs:
         run: |
           set -euo pipefail
           SSH="ssh -i ~/.ssh/deploy_key -p ${VPS_PORT:-22}"
-          $SSH "$VPS_USER@$VPS_HOST" "cd '$VPS_DEPLOY_PATH' && \
-            test -f .env && \
-            mkdir -p storage/app storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache && \
-            php artisan migrate --force && \
-            (php artisan storage:link || true) && \
-            php artisan config:cache && \
-            php artisan route:clear && \
-            php artisan view:cache && \
-            chmod -R ug+rw storage bootstrap/cache"
+          $SSH "$VPS_USER@$VPS_HOST" "export VPS_DEPLOY_PATH='$VPS_DEPLOY_PATH'; bash -se" <<'REMOTE'
+          set -euo pipefail
+          cd "$VPS_DEPLOY_PATH"
+
+          if [ ! -f .env ]; then
+            echo "ERROR: $VPS_DEPLOY_PATH/.env 不存在，请先在 VPS 上创建并填写 .env"
+            exit 1
+          fi
+
+          if ! command -v docker >/dev/null 2>&1; then
+            echo "ERROR: VPS 未安装 docker"
+            exit 1
+          fi
+
+          if docker compose version >/dev/null 2>&1; then
+            DC="docker compose"
+          elif command -v docker-compose >/dev/null 2>&1; then
+            DC="docker-compose"
+          else
+            echo "ERROR: VPS 未安装 docker compose"
+            exit 1
+          fi
+
+          mkdir -p \
+            storage/app/public \
+            storage/framework/cache \
+            storage/framework/sessions \
+            storage/framework/views \
+            storage/logs \
+            bootstrap/cache
+
+          $DC stop scheduler >/dev/null 2>&1 || true
+          $DC up -d --build --force-recreate --remove-orphans app nginx
+
+          $DC exec -T app php artisan optimize:clear || true
+          $DC exec -T app php artisan package:discover --ansi
+          $DC exec -T app php artisan migrate --force
+          $DC exec -T app php artisan storage:link || true
+          $DC exec -T app php artisan config:cache
+          $DC exec -T app php artisan route:clear
+          $DC exec -T app php artisan view:cache
+          $DC exec -T app chown -R www-data:www-data storage bootstrap/cache || true
+
+          $DC up -d --force-recreate --remove-orphans scheduler
+          $DC ps
+          REMOTE
