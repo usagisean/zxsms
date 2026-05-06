@@ -108,7 +108,7 @@ jobs:
             bootstrap/cache
 
           $DC stop scheduler >/dev/null 2>&1 || true
-          $DC up -d --build --force-recreate --remove-orphans app nginx
+          $DC up -d --build --force-recreate --remove-orphans db app nginx
 
           $DC exec -T app php artisan optimize:clear || true
           $DC exec -T app php artisan package:discover --ansi

@@ -49,11 +49,12 @@ SMS_DOCKER_HTTP_BIND=127.0.0.1
 SMS_DOCKER_HTTP_PORT=18081
 
 DB_CONNECTION=mysql
-DB_HOST=host.docker.internal
+DB_HOST=db
 DB_PORT=3306
-DB_DATABASE=你的数据库
-DB_USERNAME=你的用户名
-DB_PASSWORD=你的密码
+DB_DATABASE=zxaihub_sms
+DB_USERNAME=zxsms
+DB_PASSWORD=请填一个新的数据库用户密码
+DB_ROOT_PASSWORD=请填一个新的数据库root密码
 
 HEROSMS_API_KEY=你的HeroSMS_API_KEY
 HEROSMS_BASE_URL=https://hero-sms.com/stubs/handler_api.php
@@ -90,6 +91,12 @@ APP_KEY=base64:xxxx
 ```
 
 ### 数据库连接说明
+
+默认推荐使用内置 MySQL 容器，此时配置：
+
+```env
+DB_HOST=db
+```
 
 - 如果 MySQL 在宿主机或通过宿主机端口暴露，Docker 容器里用：
 
@@ -160,11 +167,12 @@ server {
 https://sms.zxaihub.com/sms-admin
 ```
 
-Docker 里会启动 3 个服务：
+Docker 里会启动 4 个服务：
 
 - `app`：Laravel PHP-FPM
 - `nginx`：Web 入口
 - `scheduler`：Laravel 定时任务守护，负责 HeroSMS 价格同步、验证码轮询、超时退款
+- `db`：独立 MySQL 8.0 数据库，数据保存在 Docker volume `${COMPOSE_PROJECT_NAME}_mysql_data`
 
 因此不需要宝塔 Supervisor，也不需要宿主机 cron。
 
