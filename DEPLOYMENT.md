@@ -45,7 +45,7 @@ APP_URL=https://sms.zxaihub.com
 # Docker 端口，默认只监听本机 8011，适合前面接 Nginx/Caddy/NPM 反代
 COMPOSE_PROJECT_NAME=zxsms
 SMS_DOCKER_HTTP_BIND=127.0.0.1
-SMS_DOCKER_HTTP_PORT=8011
+SMS_DOCKER_HTTP_PORT=18081
 
 DB_CONNECTION=mysql
 DB_HOST=host.docker.internal
@@ -103,13 +103,13 @@ DB_HOST=host.docker.internal
 本项目自带一个 Nginx 容器，默认暴露到宿主机本地：
 
 ```text
-127.0.0.1:8011
+127.0.0.1:18081
 ```
 
 如果你已有 Docker 反代服务，比如 Nginx Proxy Manager / Caddy / Traefik，把 `sms.zxaihub.com` 反代到：
 
 ```text
-http://127.0.0.1:8011
+http://127.0.0.1:18081
 ```
 
 如果这台 VPS 没有其它服务占用 80 端口，也可以直接公开 HTTP：

@@ -40,20 +40,32 @@ jobs:
         run: |
           set -euo pipefail
           SSH="ssh -i ~/.ssh/deploy_key -p ${VPS_PORT:-22}"
-          $SSH "$VPS_USER@$VPS_HOST" "mkdir -p '$VPS_DEPLOY_PATH'"
-          rsync -az --delete \
-            -e "$SSH" \
-            --exclude='.git/' \
-            --exclude='.github/' \
+
+          # 不依赖 VPS 安装 rsync：远端只需要常见的 tar/sh。
+          $SSH "$VPS_USER@$VPS_HOST" "export VPS_DEPLOY_PATH='$VPS_DEPLOY_PATH'; bash -se" <<'REMOTE'
+          set -euo pipefail
+          mkdir -p "$VPS_DEPLOY_PATH"
+          cd "$VPS_DEPLOY_PATH"
+          # 保留生产 .env、运行期 storage，以及用户可选的本地 compose override。
+          find . -mindepth 1 -maxdepth 1 \
+            ! -name '.env' \
+            ! -name 'storage' \
+            ! -name 'docker-compose.override.yml' \
+            -exec rm -rf {} +
+          REMOTE
+
+          tar -czf - \
+            --exclude='.git' \
+            --exclude='.github' \
             --exclude='.env' \
-            --exclude='node_modules/' \
-            --exclude='vendor/' \
+            --exclude='node_modules' \
+            --exclude='vendor' \
             --exclude='storage/app/*' \
             --exclude='storage/framework/cache/*' \
             --exclude='storage/framework/sessions/*' \
             --exclude='storage/framework/views/*' \
             --exclude='storage/logs/*' \
-            ./ "$VPS_USER@$VPS_HOST:$VPS_DEPLOY_PATH/"
+            . | $SSH "$VPS_USER@$VPS_HOST" "tar -xzf - -C '$VPS_DEPLOY_PATH'"
 
       - name: Build and restart Docker services
         env:
