@@ -1,0 +1,6 @@
+@extends('sms.admin.layout')
+@section('title','国家管理')
+@section('content')
+<div class="card"><h1>国家管理</h1><form><input name="q" value="{{ request('q') }}" placeholder="搜索国家或 provider id"></form></div>
+<div class="card"><table class="table"><thead><tr><th>ID</th><th>国家</th><th>状态/规则</th><th>价格数</th><th>保存</th></tr></thead><tbody>@foreach($countries as $c)<tr><form method="post" action="{{ route('sms.admin.countries.save',$c) }}">@csrf<td>{{ $c->provider_id }}</td><td><b>{{ $c->name }}</b><br>{{ $c->name_en }}</td><td><label><input type="checkbox" name="is_enabled" value="1" @if($c->is_enabled) checked @endif style="width:auto"> 启用</label> <span class="muted">HeroSMS可见：{{ $c->provider_visible ? '是':'否' }}</span><div class="grid"><input name="markup_multiplier" value="{{ $c->markup_multiplier }}" placeholder="加价倍数"><input name="fixed_fee" value="{{ $c->fixed_fee }}" placeholder="固定费"><input name="min_profit" value="{{ $c->min_profit }}" placeholder="最低利润"><input name="min_price" value="{{ $c->min_price }}" placeholder="最低售价"></div></td><td>{{ $c->prices_count }}</td><td><button>保存</button></td></form></tr>@endforeach</tbody></table><div>{{ $countries->links() }}</div></div>
+@endsection

@@ -1,0 +1,6 @@
+@extends('sms.admin.layout')
+@section('title','服务管理')
+@section('content')
+<div class="card"><h1>服务管理</h1><form><input name="q" value="{{ request('q') }}" placeholder="搜索名称或 code"></form></div>
+<div class="card"><table class="table"><thead><tr><th>ID</th><th>服务</th><th>状态/规则</th><th>价格数</th><th>保存</th></tr></thead><tbody>@foreach($services as $s)<tr><form method="post" action="{{ route('sms.admin.services.save',$s) }}">@csrf<td>{{ $s->id }}</td><td><b>{{ $s->name }}</b><br><span class="mono">{{ $s->provider_code }}</span></td><td><label><input type="checkbox" name="is_enabled" value="1" @if($s->is_enabled) checked @endif style="width:auto"> 启用</label> <label><input type="checkbox" name="is_featured" value="1" @if($s->is_featured) checked @endif style="width:auto"> 前台推荐</label><div class="grid"><input name="sort_order" value="{{ $s->sort_order }}" placeholder="排序，越小越前"><input name="markup_multiplier" value="{{ $s->markup_multiplier }}" placeholder="加价倍数"><input name="fixed_fee" value="{{ $s->fixed_fee }}" placeholder="固定费"><input name="min_profit" value="{{ $s->min_profit }}" placeholder="最低利润"><input name="min_price" value="{{ $s->min_price }}" placeholder="最低售价"></div></td><td>{{ $s->prices_count }}</td><td><button>保存</button></td></form></tr>@endforeach</tbody></table><div>{{ $services->links() }}</div></div>
+@endsection
