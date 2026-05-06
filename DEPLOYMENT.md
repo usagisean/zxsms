@@ -41,8 +41,9 @@ APP_ENV=production
 APP_KEY=base64:请填生成值
 APP_DEBUG=false
 APP_URL=https://sms.zxaihub.com
+SESSION_SECURE_COOKIE=true
 
-# Docker 端口，默认只监听本机 8011，适合前面接 Nginx/Caddy/NPM 反代
+# Docker 端口，默认只监听本机 18081，适合前面接 Nginx/Caddy/NPM 反代
 COMPOSE_PROJECT_NAME=zxsms
 SMS_DOCKER_HTTP_BIND=127.0.0.1
 SMS_DOCKER_HTTP_PORT=18081
@@ -120,6 +121,36 @@ SMS_DOCKER_HTTP_PORT=80
 ```
 
 HTTPS 证书建议交给前置反代或 Cloudflare 处理。
+
+宿主机 Nginx 反代示例：
+
+```nginx
+server {
+    listen 80;
+    server_name sms.zxaihub.com;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name sms.zxaihub.com;
+
+    ssl_certificate     /path/to/fullchain.pem;
+    ssl_certificate_key /path/to/privkey.pem;
+
+    location / {
+        proxy_pass http://127.0.0.1:18081;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-Port 443;
+        proxy_redirect off;
+    }
+}
+```
 
 ## 5. 后台和守护任务
 
