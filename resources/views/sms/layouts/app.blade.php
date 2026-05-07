@@ -6,7 +6,7 @@
     <title>@yield('title', __('sms.home.title'))</title>
     <style>
         :root{color-scheme:dark;--bg:#111820;--card:#18212c;--line:#2f3a49;--text:#e8edf5;--muted:#9aa7b8;--accent:#5dd6a0;--danger:#ff6b6b;--white:#fff}
-        *{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#0f1620,#111820);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,"PingFang SC","Microsoft Yahei",sans-serif;color:var(--text)}
+        *{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#0f1620,#111820);font-family:"Geist","Plus Jakarta Sans",ui-sans-serif,system-ui,sans-serif;color:var(--text)}
         a{color:var(--accent);text-decoration:none}.wrap{max-width:980px;margin:0 auto;padding:28px 18px}.nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}.brand{font-size:22px;font-weight:700}.nav a{margin-left:14px;color:#cdd6e5}
         .card{background:rgba(24,33,44,.96);border:1px solid var(--line);border-radius:18px;padding:22px;margin-bottom:18px;box-shadow:0 18px 40px rgba(0,0,0,.18)}
         .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}@media(max-width:760px){.grid,.grid3{grid-template-columns:1fr}}

@@ -81,7 +81,7 @@
                         <input type="text" name="query_password" value="{{ old('query_password') }}" placeholder="{{ __('sms.sms.query_password_placeholder') }}">
                     </div>
                 </div>
-                <p class="help">{{ __('sms.sms.login_hint_1') }} <a href="{{ route('login') }}" style="color:var(--purple2);font-weight:900">{{ __('sms.nav.email_login') }}</a> {{ __('sms.sms.login_hint_2') }}</p>
+                <p class="help">{{ __('sms.sms.login_hint_1') }} <a href="{{ route('login') }}" style="color:var(--violet2);font-weight:900">{{ __('sms.nav.email_login') }}</a> {{ __('sms.sms.login_hint_2') }}</p>
             @endauth
 
             @auth
@@ -159,8 +159,7 @@ function updatePrice(){
 }
 function highlightService(){
     document.querySelectorAll('[data-service-pick]').forEach(btn=>{
-        btn.style.borderColor = btn.dataset.servicePick === service.value ? 'rgba(154,124,255,.8)' : 'rgba(255,255,255,.06)';
-        btn.style.background = btn.dataset.servicePick === service.value ? 'rgba(118,87,240,.18)' : '#1d1e25';
+        btn.classList.toggle('is-active', btn.dataset.servicePick === service.value);
     });
 }
 document.querySelectorAll('[data-service-pick]').forEach(btn=>btn.addEventListener('click',()=>{service.value=btn.dataset.servicePick; renderCountries(); document.getElementById('order-form').scrollIntoView({behavior:'smooth',block:'start'});}));

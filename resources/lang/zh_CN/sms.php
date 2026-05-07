@@ -29,9 +29,9 @@ return [
         'metric_auto' => '自动', 'metric_auto_desc' => '失败退余额',
         'card_note' => '后台继续保留充值档位、服务、国家、价格规则、订单和 API 日志管理。',
         'slides' => [
-            ['badge' => 'ZXAIHUB SMS', 'title' => '充值余额，自动接收验证码', 'description' => '选择平台和国家，下单前实时确认成本；扣余额后自动取号、自动等待验证码。', 'card_title' => '接码流程', 'card_value' => '4 步', 'card_description' => '充值 → 选择 → 取号 → 收码'],
-            ['badge' => '余额模式', 'title' => '没收到验证码，自动退回余额', 'description' => 'HeroSMS 无库存、取号失败、成本异常或超时未收到验证码，系统自动退回用户余额。', 'card_title' => '退款状态', 'card_value' => '自动', 'card_description' => '记录完整余额流水'],
-            ['badge' => '实时价格', 'title' => '防亏本报价，不按旧价成交', 'description' => '前台展示缓存价，提交下单前重新请求 HeroSMS 最新成本，价格上涨会要求重新确认。', 'card_title' => '成本确认', 'card_value' => '实时', 'card_description' => '价格异常自动拦截'],
+            ['badge' => 'ZXAIHUB SMS', 'title' => '余额充值，自动接码', 'description' => '选择平台和国家，下单前实时确认成本；扣余额后自动取号、自动等待验证码。', 'card_title' => '接码流程', 'card_value' => '4 步', 'card_description' => '充值 → 选择 → 取号 → 收码'],
+            ['badge' => '余额模式', 'title' => '未收到码，余额退回', 'description' => 'HeroSMS 无库存、取号失败、成本异常或超时未收到验证码，系统自动退回用户余额。', 'card_title' => '退款状态', 'card_value' => '自动', 'card_description' => '记录完整余额流水'],
+            ['badge' => '实时价格', 'title' => '实时成本，防止亏本', 'description' => '前台展示缓存价，提交下单前重新请求 HeroSMS 最新成本，价格上涨会要求重新确认。', 'card_title' => '成本确认', 'card_value' => '实时', 'card_description' => '价格异常自动拦截'],
         ],
     ],
     'sms' => [

@@ -29,9 +29,9 @@ return [
         'metric_auto' => 'Auto', 'metric_auto_desc' => 'Refund on failure',
         'card_note' => 'The admin panel includes recharge plans, services, countries, pricing rules, orders and API logs.',
         'slides' => [
-            ['badge' => 'ZXAIHUB SMS', 'title' => 'Top up balance and receive verification codes automatically', 'description' => 'Choose a service and country, confirm live cost before checkout, then get a number and wait for the SMS automatically.', 'card_title' => 'SMS Flow', 'card_value' => '4 Steps', 'card_description' => 'Top up → choose → get number → receive SMS'],
-            ['badge' => 'Balance Mode', 'title' => 'No code? Refund back to balance automatically', 'description' => 'When HeroSMS has no stock, number purchase fails, cost becomes abnormal, or SMS times out, the system refunds the order to your account balance.', 'card_title' => 'Refund', 'card_value' => 'Auto', 'card_description' => 'Full wallet log retained'],
-            ['badge' => 'Live Pricing', 'title' => 'Anti-loss pricing, never sell at stale cost', 'description' => 'The frontend shows cached prices. Before checkout, the latest HeroSMS cost is checked again and higher costs require a new quote.', 'card_title' => 'Cost Check', 'card_value' => 'Live', 'card_description' => 'Abnormal prices are blocked'],
+            ['badge' => 'ZXAIHUB SMS', 'title' => 'Top up balance, receive codes automatically', 'description' => 'Choose a service and country, confirm live cost before checkout, then get a number and wait for the SMS automatically.', 'card_title' => 'SMS Flow', 'card_value' => '4 Steps', 'card_description' => 'Top up → choose → get number → receive SMS'],
+            ['badge' => 'Balance Mode', 'title' => 'No code? Refund to balance', 'description' => 'When HeroSMS has no stock, number purchase fails, cost becomes abnormal, or SMS times out, the system refunds the order to your account balance.', 'card_title' => 'Refund', 'card_value' => 'Auto', 'card_description' => 'Full wallet log retained'],
+            ['badge' => 'Live Pricing', 'title' => 'Live cost check, no stale pricing', 'description' => 'The frontend shows cached prices. Before checkout, the latest HeroSMS cost is checked again and higher costs require a new quote.', 'card_title' => 'Cost Check', 'card_value' => 'Live', 'card_description' => 'Abnormal prices are blocked'],
         ],
     ],
     'sms' => [
