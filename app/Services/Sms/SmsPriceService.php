@@ -94,7 +94,7 @@ class SmsPriceService
             } else {
                 continue;
             }
-            if (! $code) {
+            if (! $code || $this->isMetadataKey($code)) {
                 continue;
             }
             SmsService::updateOrCreate(
@@ -125,15 +125,18 @@ class SmsPriceService
         if ($serviceCode) {
             $prices += $this->syncPrices($serviceCode, $countryId);
         } else {
-            SmsService::query()->orderBy('provider_code')->chunk(50, function ($items) use (&$prices, $countryId) {
-                foreach ($items as $service) {
-                    try {
-                        $prices += $this->syncPrices($service->provider_code, $countryId);
-                    } catch (\Throwable $e) {
-                        // 单个服务失败时继续同步其他服务。失败详情会在 provider_logs 中保留。
+            SmsService::query()
+                ->whereNotIn('provider_code', $this->metadataKeys())
+                ->orderBy('provider_code')
+                ->chunk(50, function ($items) use (&$prices, $countryId) {
+                    foreach ($items as $service) {
+                        try {
+                            $prices += $this->syncPrices($service->provider_code, $countryId);
+                        } catch (\Throwable $e) {
+                            // 单个服务失败时继续同步其他服务。失败详情会在 provider_logs 中保留。
+                        }
                     }
-                }
-            });
+                });
         }
 
         return compact('countries', 'services', 'prices');
@@ -171,7 +174,7 @@ class SmsPriceService
         }
 
         $payload = $this->heroSms->getPrices($serviceCode, (int) $countryProviderId);
-        $entry = $this->extractBestPriceEntry($payload, (int) $countryProviderId);
+        $entry = $this->extractBestPriceEntry($payload, (int) $countryProviderId, $serviceCode);
         if (! $entry || (int) $entry['count'] <= 0 || (float) $entry['cost'] <= 0) {
             $this->markUnavailable($serviceCode, (int) $countryProviderId);
             throw new RuntimeException('HeroSMS 当前无库存或价格异常');
@@ -258,7 +261,7 @@ class SmsPriceService
     private function persistPrices($payload, $serviceCode = null, $countryId = null)
     {
         $count = 0;
-        $countries = $this->normalizePricePayload($payload, $countryId);
+        $countries = $this->normalizePricePayload($payload, $countryId, $serviceCode);
         $now = Carbon::now();
 
         DB::beginTransaction();
@@ -315,9 +318,9 @@ class SmsPriceService
         return $count;
     }
 
-    private function extractBestPriceEntry($payload, $countryProviderId)
+    private function extractBestPriceEntry($payload, $countryProviderId, $serviceCode = null)
     {
-        $countries = $this->normalizePricePayload($payload, $countryProviderId);
+        $countries = $this->normalizePricePayload($payload, $countryProviderId, $serviceCode);
         $operators = $countries[(string) $countryProviderId] ?? $countries[$countryProviderId] ?? [];
         $best = null;
         foreach ($operators as $operator => $entry) {
@@ -349,40 +352,188 @@ class SmsPriceService
 
     private function normalizeList($payload)
     {
+        $payload = $this->unwrapPayload($payload, ['data', 'items', 'list', 'services', 'countries', 'values', 'result']);
         if (! is_array($payload)) {
             return [];
-        }
-        if (array_keys($payload) === range(0, count($payload) - 1)) {
-            return $payload;
         }
         return $payload;
     }
 
-    private function normalizePricePayload($payload, $countryId = null)
+    private function normalizePricePayload($payload, $countryId = null, $serviceCode = null)
     {
+        $payload = $this->unwrapPayload($payload, ['data', 'prices', 'values', 'result', 'items', 'list', 'countries', 'services']);
         if (! is_array($payload)) {
             return [];
         }
-        if (isset($payload['cost']) && $countryId !== null) {
-            return [(string) $countryId => ['any' => $payload]];
-        }
+
         $normalized = [];
-        foreach ($payload as $countryKey => $operators) {
-            if (is_array($operators) && isset($operators['cost'])) {
-                $normalized[(string) $countryKey] = ['any' => $operators];
-            } elseif (is_array($operators)) {
-                $normalized[(string) $countryKey] = $operators;
+        $entries = [];
+        $this->collectPriceEntries($payload, $entries, [
+            'country' => $countryId !== null ? (string) $countryId : null,
+            'service' => $serviceCode !== null ? (string) $serviceCode : null,
+            'operator' => null,
+        ], $countryId !== null ? (string) $countryId : null, $serviceCode !== null ? (string) $serviceCode : null);
+
+        foreach ($entries as $entry) {
+            if ($countryId !== null && (string) $entry['country'] !== (string) $countryId) {
+                continue;
+            }
+            if ($serviceCode !== null && (string) $entry['service'] !== (string) $serviceCode) {
+                continue;
+            }
+
+            $countryKey = (string) $entry['country'];
+            $operator = (string) (($entry['operator'] !== null && $entry['operator'] !== '') ? $entry['operator'] : 'any');
+            $resolvedService = ($entry['service'] !== null && $entry['service'] !== '') ? $entry['service'] : ($serviceCode ?: 'unknown');
+            $svcCode = (string) $resolvedService;
+
+            if (! isset($normalized[$countryKey])) {
+                $normalized[$countryKey] = [];
+            }
+
+            if ($serviceCode !== null) {
+                $normalized[$countryKey][$operator] = $entry['payload'];
+            } else {
+                if (! isset($normalized[$countryKey][$operator])) {
+                    $normalized[$countryKey][$operator] = [];
+                }
+                $normalized[$countryKey][$operator][$svcCode] = $entry['payload'];
             }
         }
+
         return $normalized;
+    }
+
+    private function collectPriceEntries($node, array &$entries, array $context, $forcedCountryId = null, $forcedServiceCode = null)
+    {
+        if (! is_array($node)) {
+            return;
+        }
+
+        $priceEntry = $this->normalizeCostEntry($node);
+        if ($priceEntry !== null) {
+            $country = ($context['country'] !== null && $context['country'] !== '') ? $context['country'] : $forcedCountryId;
+            $service = ($context['service'] !== null && $context['service'] !== '') ? $context['service'] : $forcedServiceCode;
+            if ($country !== null && $service !== null) {
+                $entries[] = [
+                    'country' => (string) $country,
+                    'service' => (string) $service,
+                    'operator' => ($context['operator'] !== null && $context['operator'] !== '') ? $context['operator'] : 'any',
+                    'payload' => $priceEntry,
+                ];
+            }
+            return;
+        }
+
+        foreach ($node as $key => $child) {
+            if (! is_array($child)) {
+                continue;
+            }
+
+            $next = $context;
+            $keyString = (string) $key;
+
+            if ($this->isMetadataKey($keyString)) {
+                $this->collectPriceEntries($child, $entries, $next, $forcedCountryId, $forcedServiceCode);
+                continue;
+            }
+
+            $looksLikeCountry = $this->looksLikeCountryKey($keyString)
+                && ($forcedCountryId === null || $keyString === (string) $forcedCountryId || $next['country'] === null);
+
+            if ($looksLikeCountry) {
+                $next['country'] = $keyString;
+            } elseif ($forcedServiceCode !== null && $keyString === (string) $forcedServiceCode) {
+                $next['service'] = $keyString;
+            } elseif ($forcedServiceCode === null && $next['country'] !== null && $next['service'] === null) {
+                // 无 service 参数时，SMS-Activate 常见格式为 country => service => {cost,count}
+                $next['service'] = $keyString;
+            } elseif ($next['country'] !== null && $next['operator'] === null) {
+                // 有 service 参数时，country => operator => {cost,count}
+                $next['operator'] = $keyString;
+            }
+
+            $this->collectPriceEntries($child, $entries, $next, $forcedCountryId, $forcedServiceCode);
+        }
+    }
+
+    private function normalizeCostEntry(array $entry)
+    {
+        $cost = $entry['cost']
+            ?? $entry['price']
+            ?? $entry['service_cost']
+            ?? $entry['costUsd']
+            ?? $entry['cost_usd']
+            ?? null;
+
+        if ($cost === null || ! is_numeric($cost)) {
+            return null;
+        }
+
+        $count = $entry['count']
+            ?? $entry['stock']
+            ?? $entry['quantity']
+            ?? $entry['qty']
+            ?? $entry['available']
+            ?? $entry['total']
+            ?? 0;
+
+        $entry['cost'] = (float) $cost;
+        $entry['count'] = is_numeric($count) ? (int) $count : 0;
+
+        return $entry;
     }
 
     private function extractServiceEntries(array $entry)
     {
-        if (isset($entry['cost'])) {
+        if ($this->normalizeCostEntry($entry) !== null) {
             return ['unknown' => $entry];
         }
         return $entry;
+    }
+
+    private function unwrapPayload($payload, array $candidateKeys)
+    {
+        while (is_array($payload)) {
+            $unwrapped = false;
+            foreach ($candidateKeys as $key) {
+                if (isset($payload[$key]) && is_array($payload[$key]) && $this->looksLikeEnvelope($payload, $key)) {
+                    $payload = $payload[$key];
+                    $unwrapped = true;
+                    break;
+                }
+            }
+            if (! $unwrapped) {
+                break;
+            }
+        }
+        return $payload;
+    }
+
+    private function looksLikeEnvelope(array $payload, $dataKey)
+    {
+        $meta = array_merge($this->metadataKeys(), [(string) $dataKey]);
+        foreach (array_keys($payload) as $key) {
+            if (! in_array((string) $key, $meta, true)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private function looksLikeCountryKey($key)
+    {
+        return is_numeric($key) && (string) (int) $key === (string) $key;
+    }
+
+    private function isMetadataKey($key)
+    {
+        return in_array(strtolower((string) $key), $this->metadataKeys(), true);
+    }
+
+    private function metadataKeys()
+    {
+        return ['status', 'success', 'message', 'msg', 'error', 'errors', 'code', 'data', 'result', 'values', 'items', 'list', 'services', 'countries', 'prices'];
     }
 
     private function resolveRule($field, SmsService $service = null, SmsCountry $country = null, $default = null)

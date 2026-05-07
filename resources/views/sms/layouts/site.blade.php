@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <title>@yield('title', 'ZXAIHUB SMS - 在线接码平台')</title>
-    <meta name="description" content="ZXAIHUB SMS 独立在线接码站，支持邮箱账号、游客订单、支付宝、微信和 USDT 支付。">
+    <title>@yield('title', __('sms.home.title'))</title>
+    <meta name="description" content="{{ __('sms.meta_description') }}">
     <style>
         :root{
             color-scheme:dark;
@@ -15,12 +15,12 @@
         }
         *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 18% -10%,rgba(118,87,240,.35),transparent 32%),radial-gradient(circle at 86% 4%,rgba(97,213,255,.16),transparent 28%),linear-gradient(180deg,#0f1014 0,#1c1d24 48%,#17181d 100%);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,"PingFang SC","Microsoft Yahei",sans-serif;color:var(--text);min-height:100vh;overflow-x:hidden}
         body:before{content:"";position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:42px 42px;mask-image:linear-gradient(to bottom,rgba(0,0,0,.5),transparent 65%);pointer-events:none;z-index:-1}
-        a{color:inherit;text-decoration:none}button,input,select,textarea{font:inherit}.container{width:min(var(--max),calc(100vw - 48px));margin:0 auto}.topbar{position:sticky;top:0;z-index:50;background:rgba(15,16,20,.78);backdrop-filter:blur(18px);border-bottom:1px solid rgba(255,255,255,.06)}.topbar-inner{height:86px;display:flex;align-items:center;gap:28px;justify-content:space-between}.brand{display:flex;align-items:center;gap:12px;font-weight:900;letter-spacing:.3px}.brand-mark{width:44px;height:44px;border-radius:15px;background:linear-gradient(135deg,var(--purple),#4325bd);display:grid;place-items:center;box-shadow:0 12px 40px rgba(118,87,240,.45);position:relative;overflow:hidden}.brand-mark:after{content:"";position:absolute;width:60px;height:18px;background:rgba(255,255,255,.22);transform:rotate(-28deg);top:8px;left:-10px}.brand-mark span{position:relative;font-size:22px}.brand-name{font-size:24px;line-height:1}.brand-name em{font-style:normal;color:var(--purple2)}.brand-domain{display:block;font-size:12px;color:var(--dim);font-weight:700;margin-top:4px}.nav{display:flex;align-items:center;gap:6px;flex:1}.nav a{padding:12px 14px;border-radius:999px;color:#e5e7ef;font-weight:800}.nav a:hover,.nav a.active{background:rgba(118,87,240,.16);color:#fff}.nav a.highlight{color:#ff5d68}.userbar{display:flex;align-items:center;gap:12px}.avatar{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:#eef1ff;color:var(--purple);font-weight:900}.user-meta{line-height:1.15;font-weight:900}.user-meta small{display:block;color:var(--purple2);margin-top:4px}.menu-btn{display:none;border:1px solid var(--line);background:rgba(255,255,255,.05);color:#fff;border-radius:14px;padding:10px 12px}.mobile-menu{display:none;position:absolute;top:calc(100% + 10px);right:max(14px,calc((100vw - var(--max))/2));width:min(360px,calc(100vw - 28px));background:rgba(17,18,24,.98);border:1px solid rgba(255,255,255,.12);border-radius:24px;padding:12px;box-shadow:0 26px 80px rgba(0,0,0,.52);z-index:80}.mobile-menu a,.mobile-menu button{display:flex;align-items:center;justify-content:space-between;width:100%;text-align:left;padding:13px 14px;border-radius:14px;background:transparent;border:0;color:#fff;font-weight:800}.mobile-menu a:hover{background:rgba(255,255,255,.05)}
+        a{color:inherit;text-decoration:none}button,input,select,textarea{font:inherit}.container{width:min(var(--max),calc(100vw - 48px));margin:0 auto}.topbar{position:sticky;top:0;z-index:50;background:rgba(15,16,20,.78);backdrop-filter:blur(18px);border-bottom:1px solid rgba(255,255,255,.06)}.topbar-inner{height:86px;display:flex;align-items:center;gap:28px;justify-content:space-between}.brand{display:flex;align-items:center;gap:12px;font-weight:900;letter-spacing:.3px}.brand-mark{width:44px;height:44px;border-radius:15px;background:linear-gradient(135deg,var(--purple),#4325bd);display:grid;place-items:center;box-shadow:0 12px 40px rgba(118,87,240,.45);position:relative;overflow:hidden}.brand-mark:after{content:"";position:absolute;width:60px;height:18px;background:rgba(255,255,255,.22);transform:rotate(-28deg);top:8px;left:-10px}.brand-mark span{position:relative;font-size:22px}.brand-name{font-size:24px;line-height:1}.brand-name em{font-style:normal;color:var(--purple2)}.brand-domain{display:block;font-size:12px;color:var(--dim);font-weight:700;margin-top:4px}.nav{display:flex;align-items:center;gap:6px;flex:1}.nav a{padding:12px 14px;border-radius:999px;color:#e5e7ef;font-weight:800}.nav a:hover,.nav a.active{background:rgba(118,87,240,.16);color:#fff}.nav a.highlight{color:#ff5d68}.userbar{display:flex;align-items:center;gap:12px}.lang-switch select{min-height:42px;border-radius:999px;padding:8px 36px 8px 13px;background-color:rgba(255,255,255,.06);font-size:14px;font-weight:900}.avatar{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:#eef1ff;color:var(--purple);font-weight:900}.user-meta{line-height:1.15;font-weight:900}.user-meta small{display:block;color:var(--purple2);margin-top:4px}.menu-btn{display:none;border:1px solid var(--line);background:rgba(255,255,255,.05);color:#fff;border-radius:14px;padding:10px 12px}.mobile-menu{display:none;position:absolute;top:calc(100% + 10px);right:max(14px,calc((100vw - var(--max))/2));width:min(360px,calc(100vw - 28px));background:rgba(17,18,24,.98);border:1px solid rgba(255,255,255,.12);border-radius:24px;padding:12px;box-shadow:0 26px 80px rgba(0,0,0,.52);z-index:80}.mobile-menu a,.mobile-menu button{display:flex;align-items:center;justify-content:space-between;width:100%;text-align:left;padding:13px 14px;border-radius:14px;background:transparent;border:0;color:#fff;font-weight:800}.mobile-menu a:hover{background:rgba(255,255,255,.05)}
         .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:999px;padding:14px 22px;font-weight:900;cursor:pointer;min-height:48px;transition:.18s transform,.18s opacity,.18s background}.btn:hover{transform:translateY(-1px)}.btn-primary{background:linear-gradient(135deg,var(--purple),var(--purple2));color:#fff;box-shadow:0 16px 40px rgba(118,87,240,.36)}.btn-white{background:#fff;color:#111216}.btn-dark{background:#252733;color:#fff;border:1px solid var(--line2)}.btn-ghost{background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.1)}.btn-danger{background:rgba(255,93,104,.18);color:#ffd7da;border:1px solid rgba(255,93,104,.42)}.btn-block{width:100%}.section{padding:80px 0}.section-tight{padding:46px 0}.section-title{text-align:center;margin:0 0 18px;font-size:clamp(30px,4vw,54px);line-height:1.08;letter-spacing:-1.2px}.section-sub{text-align:center;color:var(--muted);font-size:clamp(16px,2vw,22px);line-height:1.7;max-width:920px;margin:0 auto 48px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}.grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}.grid5{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:18px}.panel{background:linear-gradient(180deg,rgba(32,33,42,.94),rgba(23,24,31,.96));border:1px solid rgba(255,255,255,.075);border-radius:var(--radius);box-shadow:var(--shadow);padding:28px}.panel-black{background:linear-gradient(180deg,#101114,#0d0e10);border-color:rgba(255,255,255,.06)}.muted{color:var(--muted)}.dim{color:var(--dim)}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}.ok,.err{border-radius:16px;padding:14px 16px;margin:18px auto;width:min(var(--max),calc(100vw - 48px));font-weight:800}.ok{background:rgba(85,224,163,.12);border:1px solid rgba(85,224,163,.35);color:#d9fff0}.err{background:rgba(255,93,104,.13);border:1px solid rgba(255,93,104,.36);color:#ffd9dc}.form-control,label{display:block}label{font-weight:900;margin:0 0 10px;color:#f4f5fa}.input,select,textarea,input[type="email"],input[type="password"],input[type="text"],input[type="number"]{width:100%;border:1px solid var(--line2);background:#171821;color:var(--text);border-radius:18px;padding:15px 16px;outline:none;min-height:54px}.input:focus,select:focus,textarea:focus,input:focus{border-color:var(--purple2);box-shadow:0 0 0 4px rgba(118,87,240,.18)}select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,#bdbff9 50%),linear-gradient(135deg,#bdbff9 50%,transparent 50%);background-position:calc(100% - 22px) 23px,calc(100% - 14px) 23px;background-size:8px 8px,8px 8px;background-repeat:no-repeat}.field{margin-bottom:18px}.help{font-size:13px;color:var(--dim);margin-top:8px}.price{font-size:clamp(36px,5vw,66px);font-weight:1000;color:#fff;letter-spacing:-1px}.price small{font-size:18px;color:var(--muted)}.pill{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.055);border-radius:999px;padding:8px 12px;color:#e7e8f0;font-weight:900}.table-wrap{overflow:auto}.table{width:100%;border-collapse:collapse;min-width:760px}.table th,.table td{border-bottom:1px solid rgba(255,255,255,.08);padding:16px 12px;text-align:left;vertical-align:top}.table th{color:#fff;font-size:13px;text-transform:uppercase;letter-spacing:.5px}.table td{color:#d8dbe6}.status{border-radius:999px;padding:7px 10px;background:rgba(118,87,240,.16);color:#dcd5ff;font-weight:900;font-size:13px;display:inline-flex}.copy-row{display:grid;grid-template-columns:1fr auto;gap:10px}.copy-row .btn{border-radius:16px;min-width:112px}.footer{padding:50px 0;color:#9095a6;border-top:1px solid rgba(255,255,255,.07);margin-top:40px}.footer-inner{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}.footer a{color:#cfd2dd;margin-right:14px}.hero{padding:78px 0 52px}.hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:34px;align-items:center}.eyebrow{display:inline-flex;align-items:center;gap:8px;padding:9px 13px;border:1px solid rgba(118,87,240,.35);background:rgba(118,87,240,.14);color:#ddd7ff;border-radius:999px;font-weight:900;margin-bottom:24px}.hero h1{font-size:clamp(42px,6vw,82px);line-height:1.02;margin:0 0 22px;letter-spacing:-2.3px}.hero h1 span{color:var(--purple2)}.hero p{font-size:clamp(17px,2vw,23px);line-height:1.75;color:#d6d7df;margin:0 0 30px;max-width:720px}.hero-actions{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:30px}.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;max-width:680px}.stat{padding:16px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);border-radius:18px}.stat b{font-size:25px;display:block}.stat span{color:var(--muted);font-size:13px}.carousel{position:relative;min-height:520px;overflow:hidden}.slide{position:absolute;inset:0;opacity:0;transform:translateX(20px);transition:.5s ease}.slide.active{opacity:1;transform:translateX(0)}.phone-mock{width:min(370px,88vw);margin:0 auto;border:14px solid #050608;border-radius:46px;background:#edf3ff;padding:28px 18px;color:#1b2437;box-shadow:0 26px 80px rgba(0,0,0,.48),inset 0 0 0 2px rgba(255,255,255,.16);position:relative}.phone-mock:before{content:"";position:absolute;top:10px;left:50%;transform:translateX(-50%);width:120px;height:24px;background:#050608;border-radius:0 0 18px 18px}.msg{background:#fff;border-radius:18px;padding:16px;margin:18px 0;box-shadow:0 10px 26px rgba(27,36,55,.08)}.msg strong{display:flex;gap:8px;align-items:center;margin-bottom:8px}.msg small{color:#7b8497}.service-preview{display:flex;flex-direction:column;gap:14px}.service-item{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;background:#1d1e25;border:1px solid rgba(255,255,255,.06);border-radius:20px;padding:17px}.icon{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#e7ebff,#fff);color:var(--purple);font-weight:1000}.service-item b{display:block}.service-item span{color:var(--dim);font-weight:800}.service-price{background:linear-gradient(135deg,var(--purple),var(--purple2));border-radius:999px;padding:11px 15px;font-weight:1000}.dots{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:center;gap:8px}.dot{width:9px;height:9px;border-radius:50%;border:0;background:#555a70;padding:0}.dot.active{background:var(--purple2);width:28px;border-radius:99px}.feature-card,.step-card,.faq-card{background:#0f1013;border:1px solid rgba(255,255,255,.06);border-radius:26px;padding:28px;min-height:170px}.feature-card h3,.step-card h3{font-size:24px;margin:12px 0}.feature-card p,.step-card p{color:var(--muted);line-height:1.7;margin:0}.number-badge{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,var(--purple),var(--purple2));font-size:28px;font-weight:1000}.wide-blue{background:#34467c;border-color:#425792}.use-list{display:grid;grid-template-columns:1fr 1fr;gap:34px}.use-list li{list-style:none;font-size:22px;line-height:1.5;margin:0 0 30px;font-weight:900;color:#f6f7fb}.use-list li:before{content:"⚡";color:var(--yellow);margin-right:18px}.faq-card{margin-bottom:16px;padding:0}.faq-card summary{cursor:pointer;padding:26px 30px;font-size:22px;font-weight:1000;list-style:none;display:flex;justify-content:space-between;gap:18px}.faq-card summary:after{content:"+";color:var(--purple2);font-size:28px}.faq-card[open] summary:after{content:"−"}.faq-card p{padding:0 30px 28px;margin:0;color:var(--muted);line-height:1.8;font-size:17px}.catalog-shell{display:grid;grid-template-columns:1.05fr .95fr;gap:28px;align-items:start}.selector-card{position:sticky;top:108px}.service-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:14px}.pay-card{display:flex;align-items:center;gap:12px;border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:14px;background:#171821;cursor:pointer}.pay-card input{width:auto;accent-color:var(--purple)}.empty{border:1px dashed rgba(255,255,255,.18);border-radius:24px;padding:30px;text-align:center;color:var(--muted)}.auth-shell{min-height:calc(100vh - 86px);display:grid;place-items:center;padding:64px 0}.auth-card{width:min(520px,calc(100vw - 38px))}.mini-links{display:flex;justify-content:space-between;gap:12px;margin-top:18px;color:var(--muted)}.order-head{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;flex-wrap:wrap}.order-timeline{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:20px}.time-step{border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);border-radius:16px;padding:14px;color:var(--muted)}.time-step.done{border-color:rgba(85,224,163,.34);color:#dfffee}.chat-float{position:fixed;right:28px;bottom:28px;width:58px;height:58px;border-radius:50%;display:grid;place-items:center;background:rgba(118,87,240,.16);border:1px solid rgba(154,124,255,.52);box-shadow:var(--shadow);color:#dcd5ff;font-size:23px;z-index:30}
         @media(max-width:1020px){.nav,.userbar{display:none}.menu-btn{display:inline-flex}.topbar-inner{height:74px}.mobile-menu.open{display:block}.hero-grid,.catalog-shell{grid-template-columns:1fr}.selector-card{position:static}.carousel{min-height:470px}.grid4,.grid5{grid-template-columns:repeat(2,minmax(0,1fr))}.use-list{grid-template-columns:1fr}.section{padding:58px 0}.hero{padding:52px 0 34px}}
         @media(max-width:680px){.container{width:min(100vw - 28px,var(--max))}.brand-name{font-size:20px}.brand-domain{display:none}.brand-mark{width:40px;height:40px}.hero h1{font-size:42px}.stats,.grid,.grid3,.grid4,.grid5,.service-grid,.order-timeline{grid-template-columns:1fr}.panel{padding:20px;border-radius:22px}.section-title{text-align:left}.section-sub{text-align:left;margin-bottom:28px}.hero-actions .btn{width:100%}.phone-mock{border-width:10px;border-radius:36px;padding:24px 14px}.copy-row{grid-template-columns:1fr}.copy-row .btn{width:100%}.topbar-inner{gap:12px}.chat-float{right:16px;bottom:16px;width:52px;height:52px}.faq-card summary{font-size:18px;padding:22px}.faq-card p{padding:0 22px 22px}.service-item{grid-template-columns:auto 1fr}.service-price{grid-column:1 / -1;text-align:center}.table{min-width:680px}}
 
-        /* ZXAIHUB 简洁首页与暗色可读性修正 */
+        /* ZXAIHUB homepage and dark readability fixes */
         .service-item b{color:#f4f6ff}.service-item span:not(.service-price){color:#c4c8d6}.service-price,.service-item .service-price{color:#fff!important;text-shadow:0 1px 2px rgba(0,0,0,.35);box-shadow:0 12px 28px rgba(118,87,240,.34)}
         body.home-page{height:100vh;overflow:hidden}.home-page .footer,.home-page .chat-float{display:none}.home-page main{height:calc(100vh - 86px)}
         .home-hero{height:100%;padding:0;display:flex;align-items:center}.home-carousel{position:relative;width:100%;height:min(720px,calc(100vh - 128px));min-height:520px;border:1px solid rgba(255,255,255,.08);border-radius:38px;overflow:hidden;background:#101116;box-shadow:var(--shadow)}
@@ -35,57 +35,72 @@
 <body class="@yield('body_class')">
 <header class="topbar">
     <div class="container topbar-inner">
-        <a class="brand" href="{{ route('home') }}" aria-label="ZXAIHUB SMS 首页">
+        <a class="brand" href="{{ route('home') }}" aria-label="{{ __('sms.brand') }}">
             <span class="brand-mark"><span>✦</span></span>
-            <span class="brand-name">ZXAIHUB <em>SMS</em><span class="brand-domain">zxaihub.com</span></span>
+            <span class="brand-name">ZXAIHUB <em>SMS</em><span class="brand-domain">{{ __('sms.domain') }}</span></span>
         </a>
-        <nav class="nav" aria-label="主导航">
-            <a href="{{ route('sms.index') }}" class="{{ request()->routeIs('sms.index') ? 'active' : '' }}">获取号码</a>
-            <a href="{{ route('sms.account.numbers') }}">我的号码</a>
-            <a href="{{ route('sms.recharge.index') }}">充值</a>
-            <a href="{{ route('sms.query') }}">订单查询</a>
+        <nav class="nav" aria-label="{{ __('sms.common.main_nav') }}">
+            <a href="{{ route('sms.index') }}" class="{{ request()->routeIs('sms.index') ? 'active' : '' }}">{{ __('sms.nav.get_number') }}</a>
+            <a href="{{ route('sms.account.numbers') }}">{{ __('sms.nav.my_numbers') }}</a>
+            <a href="{{ route('sms.recharge.index') }}">{{ __('sms.nav.recharge') }}</a>
+            <a href="{{ route('sms.query') }}">{{ __('sms.nav.query') }}</a>
         </nav>
         <div class="userbar">
+            <form class="lang-switch" method="get" action="{{ url()->current() }}">
+                @foreach(request()->except('lang') as $key => $value)
+                    @if(is_scalar($value))<input type="hidden" name="{{ $key }}" value="{{ $value }}">@endif
+                @endforeach
+                <select name="lang" aria-label="{{ __('sms.common.language') }}" data-locale-select onchange="this.form.submit()">
+                    @foreach(config('sms.locale.supported') as $code => $label)
+                        <option value="{{ $code }}" @if(app()->getLocale()===$code) selected @endif>{{ $label }}</option>
+                    @endforeach
+                </select>
+            </form>
             @auth
                 @php($navWallet = app(\App\Services\Sms\SmsWalletService::class)->wallet(auth()->user()))
                 <span class="avatar">{{ mb_substr(auth()->user()->name ?: auth()->user()->email, 0, 1) }}</span>
-                <span class="user-meta">{{ auth()->user()->name ?: '用户' }}<small>余额 ¥{{ number_format((float)$navWallet->balance, 2) }}</small></span>
-                <a class="btn btn-primary" href="{{ route('sms.recharge.index') }}">充值</a>
-                <form method="post" action="{{ route('logout') }}">@csrf<button class="btn btn-dark" type="submit">退出</button></form>
+                <span class="user-meta">{{ auth()->user()->name ?: __('sms.common.user') }}<small>{{ __('sms.common.balance') }} ¥{{ number_format((float)$navWallet->balance, 2) }}</small></span>
+                <a class="btn btn-primary" href="{{ route('sms.recharge.index') }}">{{ __('sms.nav.recharge') }}</a>
+                <form method="post" action="{{ route('logout') }}">@csrf<button class="btn btn-dark" type="submit">{{ __('sms.nav.logout') }}</button></form>
             @else
-                <a class="btn btn-ghost" href="{{ route('login') }}">登录</a>
-                <a class="btn btn-primary" href="{{ route('register') }}">注册</a>
+                <a class="btn btn-ghost" href="{{ route('login') }}">{{ __('sms.nav.login') }}</a>
+                <a class="btn btn-primary" href="{{ route('register') }}">{{ __('sms.nav.register') }}</a>
             @endauth
         </div>
         <button class="menu-btn" type="button" data-menu-toggle>☰</button>
     </div>
     <div class="container mobile-menu" data-mobile-menu>
-        <a href="{{ route('sms.index') }}">获取号码</a>
-        <a href="{{ route('sms.account.numbers') }}">我的号码</a>
-        <a href="{{ route('sms.recharge.index') }}">充值</a>
-        <a href="{{ route('sms.query') }}">订单查询</a>
+        <div class="mobile-langs" style="display:flex;gap:8px;padding:8px">
+            @foreach(config('sms.locale.supported') as $code => $label)
+                <a style="justify-content:center;border:1px solid rgba(255,255,255,.1)" href="{{ request()->fullUrlWithQuery(['lang'=>$code]) }}">{{ $label }}</a>
+            @endforeach
+        </div>
+        <a href="{{ route('sms.index') }}">{{ __('sms.nav.get_number') }}</a>
+        <a href="{{ route('sms.account.numbers') }}">{{ __('sms.nav.my_numbers') }}</a>
+        <a href="{{ route('sms.recharge.index') }}">{{ __('sms.nav.recharge') }}</a>
+        <a href="{{ route('sms.query') }}">{{ __('sms.nav.query') }}</a>
         @auth
-            <form method="post" action="{{ route('logout') }}">@csrf<button type="submit">退出登录：{{ auth()->user()->email }}</button></form>
+            <form method="post" action="{{ route('logout') }}">@csrf<button type="submit">{{ __('sms.nav.logout') }}：{{ auth()->user()->email }}</button></form>
         @else
-            <a href="{{ route('login') }}">邮箱登录</a>
-            <a href="{{ route('register') }}">注册账号</a>
+            <a href="{{ route('login') }}">{{ __('sms.nav.email_login') }}</a>
+            <a href="{{ route('register') }}">{{ __('sms.nav.register') }}</a>
         @endauth
     </div>
 </header>
 
 @if(session('ok'))<div class="ok">{{ session('ok') }}</div>@endif
-@if(session('quote_changed'))<div class="err">{{ session('quote_changed') }} 新价格：¥{{ session('new_price') }}</div>@endif
+@if(session('quote_changed'))<div class="err">{{ session('quote_changed') }} · {{ __('sms.common.new_price') }}：¥{{ session('new_price') }}</div>@endif
 @if($errors->any())<div class="err">{{ $errors->first() }}</div>@endif
 
 <main>
     @yield('content')
 </main>
 
-<a class="chat-float" href="{{ route('sms.query') }}" title="订单查询">☏</a>
+<a class="chat-float" href="{{ route('sms.query') }}" title="{{ __('sms.nav.query') }}">☏</a>
 <footer class="footer">
     <div class="container footer-inner">
-        <div><b>ZXAIHUB SMS</b><br><span>zxaihub.com · 独立接码站 · 余额充值 / 自动接码 / 自动退款</span></div>
-        <div><a href="{{ route('sms.index') }}">获取号码</a><a href="{{ route('sms.query') }}">订单查询</a><a href="/sms-admin">后台</a></div>
+        <div><b>ZXAIHUB SMS</b><br><span>{{ __('sms.domain') }} · {{ __('sms.footer.desc') }}</span></div>
+        <div><a href="{{ route('sms.index') }}">{{ __('sms.nav.get_number') }}</a><a href="{{ route('sms.query') }}">{{ __('sms.nav.query') }}</a><a href="/sms-admin">{{ __('sms.nav.admin') }}</a></div>
     </div>
 </footer>
 <script>

@@ -1,10 +1,9 @@
 @extends('sms.layouts.site')
-@section('title', '订单 '.$order->order_sn.' - ZXAIHUB SMS')
+@section('title', __('sms.order.title', ['sn' => $order->order_sn]))
 @php
-$statusMap = [
- 'wait_pay'=>'待支付','paid'=>'已支付，准备取号','purchasing_number'=>'正在获取号码','waiting_code'=>'等待验证码','completed'=>'已完成','price_changed'=>'价格已变化','provider_no_stock'=>'HeroSMS 无库存','refund_required'=>'需人工处理/退款','cancelled'=>'已取消','expired'=>'已过期','failed'=>'失败'
-];
-$statusMap['refunded'] = '已退回余额';
+$statusKey = 'sms.status.' . $order->status;
+$statusText = __($statusKey);
+if ($statusText === $statusKey) { $statusText = $order->status; }
 $payment = $order->latestPayment;
 $donePay = !empty($order->paid_at);
 $donePhone = !empty($order->phone_number);
@@ -16,25 +15,25 @@ $doneCode = !empty($order->sms_code);
         <div class="panel">
             <div class="order-head">
                 <div>
-                    <div class="eyebrow">📄 接码订单</div>
+                    <div class="eyebrow">{{ __('sms.order.eyebrow') }}</div>
                     <h1 style="font-size:clamp(32px,4vw,56px);margin:0 0 12px" class="mono">{{ $order->order_sn }}</h1>
                     <div style="display:flex;gap:10px;flex-wrap:wrap">
                         <span class="pill">{{ $order->service->name ?? $order->service_code }}</span>
                         <span class="pill">{{ $order->country->name ?? $order->country_code }}</span>
-                        <span class="status">{{ $statusMap[$order->status] ?? $order->status }}</span>
+                        <span class="status">{{ $statusText }}</span>
                     </div>
                 </div>
                 <div style="text-align:right">
-                    <div class="muted">订单金额</div>
+                    <div class="muted">{{ __('sms.order.amount') }}</div>
                     <div class="price">¥{{ number_format((float)$order->sale_price, 2) }}</div>
                 </div>
             </div>
             @if($order->status_note)<p class="err" style="width:100%;margin:22px 0 0">{{ $order->status_note }}</p>@endif
             <div class="order-timeline">
-                <div class="time-step done"><b>1. 已报价</b><br><span>实时成本确认</span></div>
-                <div class="time-step {{ $donePay ? 'done' : '' }}"><b>2. 支付</b><br><span>{{ $donePay ? optional($order->paid_at)->format('H:i:s') : '等待支付' }}</span></div>
-                <div class="time-step {{ $donePhone ? 'done' : '' }}"><b>3. 取号</b><br><span>{{ $donePhone ? '号码已获取' : '支付后自动取号' }}</span></div>
-                <div class="time-step {{ $doneCode ? 'done' : '' }}"><b>4. 验证码</b><br><span>{{ $doneCode ? '验证码已到达' : '等待短信' }}</span></div>
+                <div class="time-step done"><b>1. {{ __('sms.order.quoted') }}</b><br><span>{{ __('sms.order.quoted_desc') }}</span></div>
+                <div class="time-step {{ $donePay ? 'done' : '' }}"><b>2. {{ __('sms.order.pay_step') }}</b><br><span>{{ $donePay ? optional($order->paid_at)->format('H:i:s') : __('sms.order.waiting_pay') }}</span></div>
+                <div class="time-step {{ $donePhone ? 'done' : '' }}"><b>3. {{ __('sms.order.number_step') }}</b><br><span>{{ $donePhone ? __('sms.order.number_done') : __('sms.order.number_pending') }}</span></div>
+                <div class="time-step {{ $doneCode ? 'done' : '' }}"><b>4. {{ __('sms.order.code_step') }}</b><br><span>{{ $doneCode ? __('sms.order.code_done') : __('sms.order.code_pending') }}</span></div>
             </div>
         </div>
     </div>
@@ -43,49 +42,54 @@ $doneCode = !empty($order->sms_code);
 <section class="section-tight">
     <div class="container grid">
         <div class="panel panel-black">
-            <h2 style="margin-top:0;font-size:30px">支付信息</h2>
+            <h2 style="margin-top:0;font-size:30px">{{ __('sms.order.payment_info') }}</h2>
             @if($payment)
-                <p><span class="muted">支付方式：</span>{{ $payment->method_code }} / {{ $payment->status }}</p>
-                <p><span class="muted">支付单号：</span><span class="mono">{{ $payment->payment_sn }}</span></p>
+                @php
+                    $paymentStatusKey = 'sms.status.' . $payment->status;
+                    $paymentStatusText = __($paymentStatusKey);
+                    if ($paymentStatusText === $paymentStatusKey) { $paymentStatusText = $payment->status; }
+                @endphp
+                <p><span class="muted">{{ __('sms.order.payment_method') }}：</span>{{ $payment->method_code }} / {{ $paymentStatusText }}</p>
+                <p><span class="muted">{{ __('sms.order.payment_sn') }}：</span><span class="mono">{{ $payment->payment_sn }}</span></p>
                 @if($order->status === 'wait_pay' && $payment->status === 'pending')
-                    <p class="muted">请在 {{ optional($order->expires_at)->toDateTimeString() }} 前完成支付，过期需重新下单。</p>
-                    <a class="btn btn-primary btn-block" href="{{ route('sms.pay.gateway', ['methodCode'=>$payment->method_code, 'paymentSn'=>$payment->payment_sn]) }}">立即支付</a>
+                    <p class="muted">{{ __('sms.order.pay_before', ['time' => optional($order->expires_at)->toDateTimeString()]) }}</p>
+                    <a class="btn btn-primary btn-block" href="{{ route('sms.pay.gateway', ['methodCode'=>$payment->method_code, 'paymentSn'=>$payment->payment_sn]) }}">{{ __('sms.order.pay_now') }}</a>
                 @elseif($payment->status === 'paid')
-                    <div class="ok" style="width:100%;margin:14px 0 0">已支付：{{ optional($payment->paid_at)->toDateTimeString() }}</div>
+                    <div class="ok" style="width:100%;margin:14px 0 0">{{ __('sms.order.paid_at', ['time' => optional($payment->paid_at)->toDateTimeString()]) }}</div>
                 @endif
             @else
                 @if($order->wallet_paid_at)
-                    <p><span class="muted">支付方式：</span>余额支付</p>
-                    <p><span class="muted">扣款金额：</span>¥{{ number_format((float)$order->wallet_amount, 2) }}</p>
-                    <div class="ok" style="width:100%;margin:14px 0 0">已从余额扣款：{{ optional($order->wallet_paid_at)->toDateTimeString() }}</div>
+                    <p><span class="muted">{{ __('sms.order.payment_method') }}：</span>{{ __('sms.order.wallet_pay') }}</p>
+                    <p><span class="muted">{{ __('sms.order.wallet_amount') }}：</span>¥{{ number_format((float)$order->wallet_amount, 2) }}</p>
+                    <div class="ok" style="width:100%;margin:14px 0 0">{{ __('sms.order.wallet_paid_at', ['time' => optional($order->wallet_paid_at)->toDateTimeString()]) }}</div>
                     @if($order->wallet_refunded_at)
-                        <div class="err" style="width:100%;margin:14px 0 0">已退回余额：{{ optional($order->wallet_refunded_at)->toDateTimeString() }}；原因：{{ $order->wallet_refund_reason }}</div>
+                        <div class="err" style="width:100%;margin:14px 0 0">{{ __('sms.order.wallet_refunded', ['time' => optional($order->wallet_refunded_at)->toDateTimeString(), 'reason' => $order->wallet_refund_reason]) }}</div>
                     @endif
                 @else
-                    <p class="muted">没有找到支付单。</p>
+                    <p class="muted">{{ __('sms.order.no_payment') }}</p>
                 @endif
             @endif
             <div style="margin-top:20px;display:flex;gap:12px;flex-wrap:wrap">
-                <a class="btn btn-dark" href="{{ route('sms.index') }}">再买一个</a>
-                <a class="btn btn-ghost" href="{{ route('sms.query') }}">查询订单</a>
+                <a class="btn btn-dark" href="{{ route('sms.index') }}">{{ __('sms.order.buy_again') }}</a>
+                <a class="btn btn-ghost" href="{{ route('sms.query') }}">{{ __('sms.order.query_order') }}</a>
             </div>
         </div>
 
         <div class="panel">
-            <h2 style="margin-top:0;font-size:30px">号码与验证码</h2>
+            <h2 style="margin-top:0;font-size:30px">{{ __('sms.order.number_code') }}</h2>
             <div class="field">
-                <label>手机号码</label>
-                <div class="copy-row"><input class="mono" id="phone" readonly value="{{ $order->phone_number }}" placeholder="支付后自动获取"><button type="button" class="btn btn-dark" data-copy="phone">复制号码</button></div>
+                <label>{{ __('sms.order.phone') }}</label>
+                <div class="copy-row"><input class="mono" id="phone" readonly value="{{ $order->phone_number }}" placeholder="{{ __('sms.order.phone_placeholder') }}"><button type="button" class="btn btn-dark" data-copy="phone">{{ __('sms.order.copy_phone') }}</button></div>
             </div>
             <div class="field">
-                <label>验证码</label>
-                <div class="copy-row"><input class="mono" id="code" readonly value="{{ $order->sms_code }}" placeholder="等待短信验证码"><button type="button" class="btn btn-dark" data-copy="code">复制验证码</button></div>
+                <label>{{ __('sms.order.code') }}</label>
+                <div class="copy-row"><input class="mono" id="code" readonly value="{{ $order->sms_code }}" placeholder="{{ __('sms.order.code_placeholder') }}"><button type="button" class="btn btn-dark" data-copy="code">{{ __('sms.order.copy_code') }}</button></div>
             </div>
             <div class="field">
-                <label>短信内容</label>
-                <textarea id="sms_text" rows="4" readonly placeholder="完整短信内容会显示在这里">{{ $order->sms_text }}</textarea>
+                <label>{{ __('sms.order.sms_text') }}</label>
+                <textarea id="sms_text" rows="4" readonly placeholder="{{ __('sms.order.sms_text_placeholder') }}">{{ $order->sms_text }}</textarea>
             </div>
-            <p class="muted" id="polling-text">页面会自动刷新订单状态。</p>
+            <p class="muted" id="polling-text">{{ __('sms.order.polling') }}</p>
         </div>
     </div>
 </section>
@@ -93,10 +97,10 @@ $doneCode = !empty($order->sms_code);
 @if(in_array($order->status, ['waiting_code','purchasing_number']))
 <section class="section-tight">
     <div class="container">
-        <form method="post" action="{{ route('sms.order.cancel', ['token'=>$order->token]) }}" onsubmit="return confirm('确认取消？')" class="panel panel-black">
+        <form method="post" action="{{ route('sms.order.cancel', ['token'=>$order->token]) }}" onsubmit="return confirm(@json(__('sms.order.cancel_confirm')))" class="panel panel-black">
             @csrf
-            <button class="btn btn-danger" type="submit">取消订单</button>
-            <span class="muted" style="margin-left:12px">仅未完成接码时可取消。</span>
+            <button class="btn btn-danger" type="submit">{{ __('sms.order.cancel') }}</button>
+            <span class="muted" style="margin-left:12px">{{ __('sms.order.cancel_tip') }}</span>
         </form>
     </div>
 </section>
@@ -105,7 +109,9 @@ $doneCode = !empty($order->sms_code);
 @section('scripts')
 <script>
 const terminal = ['completed','cancelled','expired','refund_required','provider_no_stock','failed','refunded'];
+const pollingTemplate = @json(__('sms.order.polling_status'));
 function copy(id){const el=document.getElementById(id); if(!el || !el.value)return; navigator.clipboard.writeText(el.value);}
+function tpl(text, vars){return Object.keys(vars).reduce((s,k)=>s.replace(':'+k, vars[k]), text);}
 document.querySelectorAll('[data-copy]').forEach(btn=>btn.addEventListener('click',()=>copy(btn.dataset.copy)));
 async function poll(){
     try{
@@ -116,7 +122,7 @@ async function poll(){
         if(data.phone_number) document.getElementById('phone').value=data.phone_number;
         if(data.sms_code) document.getElementById('code').value=data.sms_code;
         if(data.sms_text) document.getElementById('sms_text').value=data.sms_text;
-        document.getElementById('polling-text').textContent='状态：'+(data.status_text||data.status)+'；最后检查：'+new Date().toLocaleTimeString();
+        document.getElementById('polling-text').textContent=tpl(pollingTemplate, {status:(data.status_text||data.status), time:new Date().toLocaleTimeString()});
         if(!terminal.includes(data.status)) setTimeout(poll, 8000);
     }catch(e){ setTimeout(poll, 12000); }
 }

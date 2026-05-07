@@ -1,6 +1,14 @@
 <?php
 
 return [
+    'locale' => [
+        'default' => env('SMS_DEFAULT_LOCALE', 'zh_CN'),
+        'supported' => [
+            'zh_CN' => '中文',
+            'en' => 'English',
+        ],
+    ],
+
     'herosms' => [
         'api_key' => env('HEROSMS_API_KEY'),
         'base_url' => env('HEROSMS_BASE_URL', 'https://hero-sms.com/stubs/handler_api.php'),

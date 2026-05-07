@@ -98,11 +98,11 @@ class SmsController extends Controller
     {
         $order = SmsOrder::where('token', $token)->firstOrFail();
         if (in_array($order->status, [SmsOrder::STATUS_COMPLETED, SmsOrder::STATUS_CANCELLED, SmsOrder::STATUS_EXPIRED], true)) {
-            return back()->withErrors(['cancel' => '当前状态不能取消']);
+            return back()->withErrors(['cancel' => __('sms.order.cancel_not_allowed')]);
         }
         try {
             $this->orders->cancelOrder($order);
-            return back()->with('ok', '已取消');
+            return back()->with('ok', __('sms.status.cancelled'));
         } catch (\Throwable $e) {
             return back()->withErrors(['cancel' => $e->getMessage()]);
         }
@@ -127,20 +127,6 @@ class SmsController extends Controller
 
     public function statusText($status)
     {
-        $map = [
-            SmsOrder::STATUS_WAIT_PAY => '待支付',
-            SmsOrder::STATUS_PAID => '已支付，准备取号',
-            SmsOrder::STATUS_PURCHASING => '正在获取号码',
-            SmsOrder::STATUS_WAITING_CODE => '等待验证码',
-            SmsOrder::STATUS_COMPLETED => '已完成',
-            SmsOrder::STATUS_PRICE_CHANGED => '价格已变化',
-            SmsOrder::STATUS_PROVIDER_NO_STOCK => 'HeroSMS 无库存',
-            SmsOrder::STATUS_REFUND_REQUIRED => '需人工处理/退款',
-            SmsOrder::STATUS_REFUNDED => '已退回余额',
-            SmsOrder::STATUS_CANCELLED => '已取消',
-            SmsOrder::STATUS_EXPIRED => '已过期',
-            SmsOrder::STATUS_FAILED => '失败',
-        ];
-        return $map[$status] ?? $status;
+        return __("sms.status.$status") === "sms.status.$status" ? $status : __("sms.status.$status");
     }
 }

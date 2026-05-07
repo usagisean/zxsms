@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@yield('title', 'HeroSMS 接码站')</title>
+    <title>@yield('title', __('sms.home.title'))</title>
     <style>
         :root{color-scheme:dark;--bg:#111820;--card:#18212c;--line:#2f3a49;--text:#e8edf5;--muted:#9aa7b8;--accent:#5dd6a0;--danger:#ff6b6b;--white:#fff}
         *{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#0f1620,#111820);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,"PingFang SC","Microsoft Yahei",sans-serif;color:var(--text)}
@@ -16,11 +16,11 @@
 <body>
 <div class="wrap">
     <div class="nav">
-        <a class="brand" href="{{ route('sms.index') }}">HeroSMS 接码</a>
-        <div><a href="{{ route('sms.query') }}">查询订单</a><a href="/sms-admin">后台</a></div>
+        <a class="brand" href="{{ route('sms.index') }}">ZXAIHUB SMS</a>
+        <div><a href="{{ route('sms.query') }}">{{ __('sms.nav.query') }}</a><a href="/sms-admin">{{ __('sms.nav.admin') }}</a></div>
     </div>
     @if(session('ok'))<div class="ok">{{ session('ok') }}</div>@endif
-    @if(session('quote_changed'))<div class="err">{{ session('quote_changed') }} 新价格：¥{{ session('new_price') }}</div>@endif
+    @if(session('quote_changed'))<div class="err">{{ session('quote_changed') }} · {{ __('sms.common.new_price') }}：¥{{ session('new_price') }}</div>@endif
     @if($errors->any())<div class="err">{{ $errors->first() }}</div>@endif
     @yield('content')
 </div>
