@@ -13,7 +13,7 @@
             <label class="pay-card" style="margin:0 0 20px"><input type="checkbox" name="remember" value="1"><span>{{ __('sms.auth.remember') }}</span></label>
             <button class="btn btn-primary btn-block" type="submit">{{ __('sms.auth.login_btn') }}</button>
         </form>
-        <div class="mini-links"><span>{{ __('sms.auth.no_account') }}</span><a href="{{ route('register') }}" style="color:var(--purple2);font-weight:900">{{ __('sms.auth.register_now') }}</a></div>
+        <div class="mini-links"><span>{{ __('sms.auth.no_account') }}</span><a href="{{ route('register') }}" style="color:var(--accent2);font-weight:900">{{ __('sms.auth.register_now') }}</a></div>
     </div>
 </section>
 @endsection

@@ -14,7 +14,7 @@
             <div class="field"><label>{{ __('sms.auth.password_confirm') }}</label><input type="password" name="password_confirmation" required placeholder="{{ __('sms.auth.password_confirm_placeholder') }}"></div>
             <button class="btn btn-primary btn-block" type="submit">{{ __('sms.auth.register_btn') }}</button>
         </form>
-        <div class="mini-links"><span>{{ __('sms.auth.have_account') }}</span><a href="{{ route('login') }}" style="color:var(--purple2);font-weight:900">{{ __('sms.auth.go_login') }}</a></div>
+        <div class="mini-links"><span>{{ __('sms.auth.have_account') }}</span><a href="{{ route('login') }}" style="color:var(--accent2);font-weight:900">{{ __('sms.auth.go_login') }}</a></div>
     </div>
 </section>
 @endsection
