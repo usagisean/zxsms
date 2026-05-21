@@ -7,6 +7,7 @@ use App\Models\Sms\SmsMessage;
 use App\Models\Sms\SmsOrder;
 use App\Models\Sms\SmsPaymentOrder;
 use App\Models\Sms\SmsPrice;
+use App\Models\Sms\SmsWallet;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -43,12 +44,22 @@ class SmsOrderService
     {
         $quantity = (int) ($input['quantity'] ?? 1);
         $methodCode = (string) ($input['payment_method'] ?? '');
+
+        if ($this->activeProvider() === 'inventory') {
+            $methodCode = 'balance';
+            $input['payment_method'] = 'balance';
+        }
         
         if ($quantity < 1 || $quantity > 50) {
             throw new RuntimeException('单次购买数量必须在 1 到 50 之间');
         }
         if ($quantity > 1 && $methodCode !== 'balance') {
             throw new RuntimeException('批量购买目前仅支持使用账户余额支付，请先充值');
+        }
+
+        $guard = $this->validateBatchPurchase($input, $quantity, $methodCode);
+        if (! empty($guard['changed'])) {
+            return $guard;
         }
 
         if ($quantity === 1) {
@@ -65,13 +76,71 @@ class SmsOrderService
                     if (empty($results)) return $res;
                     break;
                 }
-                $results[] = $res['order'];
+                $order = $res['order']->fresh();
+                if (! in_array($order->status, [SmsOrder::STATUS_WAITING_CODE, SmsOrder::STATUS_COMPLETED], true)) {
+                    if (empty($results)) {
+                        throw new RuntimeException($order->status_note ?: '发货失败，已自动退回余额，请稍后重试。');
+                    }
+                    break;
+                }
+                $results[] = $order;
             } catch (\Throwable $e) {
                 if (empty($results)) throw $e;
                 break;
             }
         }
+        if (empty($results)) {
+            throw new RuntimeException('本次未能成功发货，请稍后重试。');
+        }
         return ['changed' => false, 'orders' => collect($results)];
+    }
+
+    private function validateBatchPurchase(array $input, $quantity, $methodCode)
+    {
+        $serviceCode = (string) ($input['service_code'] ?? '');
+        $countryCode = (int) ($input['country_code'] ?? 0);
+        $displayedPrice = isset($input['displayed_price']) ? (float) $input['displayed_price'] : null;
+
+        if ($serviceCode === '' || $countryCode <= 0) {
+            throw new RuntimeException('请选择平台和国家');
+        }
+
+        list($livePrice, $pricing) = $this->prices->getLiveQuote($serviceCode, $countryCode);
+        $salePrice = (float) $pricing['sale_price'];
+        $tolerance = (float) config('sms.pricing.reprice_tolerance', 0);
+
+        if ($displayedPrice !== null && bccomp((string) $salePrice, (string) ($displayedPrice + $tolerance), 2) === 1) {
+            return [
+                'changed' => true,
+                'old_price' => $displayedPrice,
+                'new_price' => $salePrice,
+                'message' => $this->activeProvider() === 'inventory' ? '库存售价已变化，已为你重新报价，请确认后再购买。' : 'HeroSMS 成本已变化，已为你重新报价，请确认后再支付。',
+                'price' => $livePrice,
+            ];
+        }
+
+        $maxQuantity = max(1, min(50, (int) ($livePrice->max_quantity ?: 50)));
+        if ($quantity > $maxQuantity) {
+            throw new RuntimeException('该商品单次最多购买 ' . $maxQuantity . ' 个，请减少数量后再购买。');
+        }
+
+        $stock = max(0, (int) $livePrice->stock_count);
+        if ($quantity > $stock) {
+            throw new RuntimeException('当前库存只有 ' . $stock . ' 个，请减少数量后再购买。');
+        }
+
+        if ($methodCode === 'balance') {
+            if (empty($input['user_id'])) {
+                throw new RuntimeException('余额支付需要先登录账号');
+            }
+            $balance = (float) (SmsWallet::where('user_id', (int) $input['user_id'])->value('balance') ?? 0);
+            $total = round($salePrice * $quantity, 2);
+            if (bccomp((string) $balance, (string) $total, 2) < 0) {
+                throw new RuntimeException('余额不足，请先充值。当前余额 ¥' . number_format($balance, 2) . '，本次需要 ¥' . number_format($total, 2));
+            }
+        }
+
+        return ['changed' => false, 'price' => $livePrice, 'pricing' => $pricing];
     }
 
     public function createOrder(array $input, $ip = null)
@@ -151,9 +220,9 @@ class SmsOrderService
             }
             DB::commit();
             if ($methodCode === 'balance') {
-                $this->purchaseNumber($order->fresh());
+                $order = $this->purchaseNumber($order->fresh());
             }
-            return ['changed' => false, 'order' => $order, 'payment' => $payment];
+            return ['changed' => false, 'order' => $order->fresh(), 'payment' => $payment];
         } catch (\Throwable $e) {
             DB::rollBack();
             throw $e;
@@ -245,15 +314,17 @@ class SmsOrderService
             $order->code_received_at = Carbon::now();
             $order->save();
 
-            SmsMessage::create([
-                'sms_order_id' => $order->id,
-                'provider_activation_id' => $order->provider_activation_id,
-                'type' => $status['type'] ?? 'sms',
-                'code' => $status['code'] ?? null,
-                'text' => $status['text'] ?? null,
-                'received_at' => Carbon::now(),
-                'raw' => $status['raw'] ?? null,
-            ]);
+            if (! $sameMessage) {
+                SmsMessage::create([
+                    'sms_order_id' => $order->id,
+                    'provider_activation_id' => $order->provider_activation_id,
+                    'type' => $status['type'] ?? 'sms',
+                    'code' => $status['code'] ?? null,
+                    'text' => $status['text'] ?? null,
+                    'received_at' => Carbon::now(),
+                    'raw' => $status['raw'] ?? null,
+                ]);
+            }
 
             try {
                 $this->heroSms->complete($order->provider_activation_id, $order);
@@ -510,6 +581,8 @@ class SmsOrderService
         $card->last_polled_at = $now;
 
         if (! empty($status['has_message'])) {
+            $sameMessage = (string) $order->sms_code === (string) ($status['code'] ?? '')
+                && (string) $order->sms_text === (string) ($status['text'] ?? '');
             $order->sms_code = $status['code'];
             $order->sms_text = $status['text'];
             $order->status = SmsOrder::STATUS_COMPLETED;

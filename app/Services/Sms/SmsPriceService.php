@@ -362,21 +362,26 @@ class SmsPriceService
 
                 $costCny = (float) ($group['min_cost_cny'] ?: 0);
                 $salePrice = (float) ($group['min_sale'] ?: 0);
+                $priceKey = [
+                    'provider_service_code' => (string) $group['service_code'],
+                    'provider_country_id' => (int) $group['country_code'],
+                    'operator' => 'inventory',
+                ];
+                $existingPrice = SmsPrice::where($priceKey)->first();
+                $existingRaw = is_array(optional($existingPrice)->raw) ? $existingPrice->raw : [];
+                $manualHidden = ! empty($existingRaw['manual_hidden']);
+                $raw = array_merge($existingRaw, ['provider' => 'inventory', 'cost_cny' => $costCny]);
                 SmsPrice::updateOrCreate(
-                    [
-                        'provider_service_code' => (string) $group['service_code'],
-                        'provider_country_id' => (int) $group['country_code'],
-                        'operator' => 'inventory',
-                    ],
+                    $priceKey,
                     [
                         'service_id' => $service->id,
                         'country_id' => $country->id,
                         'cost_usd' => round($costCny / $exchangeRate, 4),
                         'stock_count' => (int) $group['count'],
                         'sale_price' => $salePrice,
-                        'is_available' => $group['count'] > 0 && $salePrice > 0,
+                        'is_available' => ! $manualHidden && $group['count'] > 0 && $salePrice > 0,
                         'synced_at' => $now,
-                        'raw' => ['provider' => 'inventory', 'cost_cny' => $costCny],
+                        'raw' => $raw,
                     ]
                 );
                 $priceCount++;
@@ -416,6 +421,16 @@ class SmsPriceService
         if (! $service->is_enabled || ! $country->is_enabled || ! $country->provider_visible) {
             throw new RuntimeException('该商品暂不可下单');
         }
+        $priceKey = [
+            'provider_service_code' => (string) $serviceCode,
+            'provider_country_id' => (int) $countryProviderId,
+            'operator' => 'inventory',
+        ];
+        $existingPrice = SmsPrice::where($priceKey)->first();
+        $existingRaw = is_array(optional($existingPrice)->raw) ? $existingPrice->raw : [];
+        if (! empty($existingRaw['manual_hidden'])) {
+            throw new RuntimeException('该商品已隐藏，暂不可下单');
+        }
 
         $cards = SmsInventoryCard::where('service_code', $serviceCode)
             ->where('country_code', (int) $countryProviderId)
@@ -446,11 +461,7 @@ class SmsPriceService
         ];
 
         $price = SmsPrice::updateOrCreate(
-            [
-                'provider_service_code' => (string) $serviceCode,
-                'provider_country_id' => (int) $countryProviderId,
-                'operator' => 'inventory',
-            ],
+            $priceKey,
             [
                 'service_id' => $service->id,
                 'country_id' => $country->id,
@@ -459,7 +470,7 @@ class SmsPriceService
                 'sale_price' => $pricing['sale_price'],
                 'is_available' => true,
                 'synced_at' => now(),
-                'raw' => ['provider' => 'inventory', 'cost_cny' => $costCny],
+                'raw' => array_merge($existingRaw, ['provider' => 'inventory', 'cost_cny' => $costCny]),
             ]
         );
 

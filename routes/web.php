@@ -47,8 +47,8 @@ Route::prefix(env('ADMIN_PATH', 'sms-admin'))->name('sms.admin.')->middleware('s
     Route::get('/countries', [SmsAdminController::class, 'countries'])->name('countries');
     Route::post('/countries/{country}', [SmsAdminController::class, 'saveCountry'])->name('countries.save');
     Route::get('/prices', [SmsAdminController::class, 'prices'])->name('prices');
-    Route::post('/prices/{price}', [SmsAdminController::class, 'savePrice'])->name('prices.save');
     Route::post('/prices/sync', [SmsAdminController::class, 'syncPrices'])->name('prices.sync');
+    Route::post('/prices/{price}', [SmsAdminController::class, 'savePrice'])->whereNumber('price')->name('prices.save');
     Route::get('/inventory', [SmsAdminController::class, 'inventory'])->name('inventory');
     Route::post('/inventory/import', [SmsAdminController::class, 'importInventory'])->name('inventory.import');
     Route::post('/inventory/sync', [SmsAdminController::class, 'syncInventory'])->name('inventory.sync');

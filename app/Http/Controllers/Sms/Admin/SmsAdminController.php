@@ -24,16 +24,20 @@ class SmsAdminController extends Controller
 {
     public function dashboard()
     {
+        $today = Carbon::today();
+
         return view('sms.admin.dashboard', [
             'counts' => [
-                'services' => SmsService::count(),
-                'countries' => SmsCountry::count(),
-                'available_prices' => SmsPrice::where('is_available', true)->count(),
-                'orders' => SmsOrder::count(),
-                'recharges' => SmsRechargeOrder::count(),
+                'available_inventory' => SmsInventoryCard::where('status', SmsInventoryCard::STATUS_AVAILABLE)->count(),
+                'sold_inventory' => SmsInventoryCard::where('status', SmsInventoryCard::STATUS_SOLD)->count(),
+                'visible_products' => SmsPrice::where('operator', 'inventory')->where('is_available', true)->count(),
                 'waiting_code' => SmsOrder::where('status', SmsOrder::STATUS_WAITING_CODE)->count(),
+                'today_orders' => SmsOrder::where('created_at', '>=', $today)->count(),
+                'today_sales' => (float) SmsWalletLog::where('type', SmsWalletLog::TYPE_SPEND)->where('created_at', '>=', $today)->sum('amount'),
+                'today_recharge' => (float) SmsRechargeOrder::where('status', SmsRechargeOrder::STATUS_PAID)->where('paid_at', '>=', $today)->sum('total_amount'),
                 'refund_required' => SmsOrder::where('status', SmsOrder::STATUS_REFUND_REQUIRED)->count(),
-                'wallet_refunded' => SmsOrder::whereNotNull('wallet_refunded_at')->count(),
+                'low_stock_products' => SmsPrice::where('operator', 'inventory')->where('is_available', true)->where('stock_count', '<=', 2)->count(),
+                'registered_users' => User::count(),
             ],
         ]);
     }
@@ -198,16 +202,25 @@ class SmsAdminController extends Controller
             'title' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:500'],
             'base_sold_count' => ['nullable', 'integer', 'min:0'],
-            'max_quantity' => ['nullable', 'integer', 'min:1'],
+            'max_quantity' => ['nullable', 'integer', 'min:1', 'max:50'],
             'is_available' => ['nullable', 'boolean'],
         ]);
+
+        $raw = is_array($price->raw) ? $price->raw : [];
+        $manualHidden = ! $request->boolean('is_available');
+        if ($manualHidden) {
+            $raw['manual_hidden'] = true;
+        } else {
+            unset($raw['manual_hidden']);
+        }
         
         $price->fill([
-            'title' => $data['title'],
-            'description' => $data['description'],
+            'title' => $data['title'] ?? null,
+            'description' => $data['description'] ?? null,
             'base_sold_count' => $data['base_sold_count'] ?? 0,
             'max_quantity' => $data['max_quantity'] ?? 10,
             'is_available' => $request->boolean('is_available'),
+            'raw' => $raw,
         ])->save();
         
         return back()->with('ok', '商品前台展示信息已更新');
