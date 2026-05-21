@@ -38,7 +38,7 @@ Route::prefix('sms')->name('sms.')->group(function () {
     Route::get('/pay/epusdt/return_url', [SmsPaymentController::class, 'epusdtReturn'])->name('pay.epusdt.return');
 });
 
-Route::prefix('sms-admin')->name('sms.admin.')->middleware('sms.admin')->group(function () {
+Route::prefix(env('ADMIN_PATH', 'sms-admin'))->name('sms.admin.')->middleware('sms.admin')->group(function () {
     Route::get('/', [SmsAdminController::class, 'dashboard'])->name('dashboard');
     Route::get('/settings', [SmsAdminController::class, 'settings'])->name('settings');
     Route::post('/settings', [SmsAdminController::class, 'saveSettings'])->name('settings.save');
@@ -47,6 +47,7 @@ Route::prefix('sms-admin')->name('sms.admin.')->middleware('sms.admin')->group(f
     Route::get('/countries', [SmsAdminController::class, 'countries'])->name('countries');
     Route::post('/countries/{country}', [SmsAdminController::class, 'saveCountry'])->name('countries.save');
     Route::get('/prices', [SmsAdminController::class, 'prices'])->name('prices');
+    Route::post('/prices/{price}', [SmsAdminController::class, 'savePrice'])->name('prices.save');
     Route::post('/prices/sync', [SmsAdminController::class, 'syncPrices'])->name('prices.sync');
     Route::get('/inventory', [SmsAdminController::class, 'inventory'])->name('inventory');
     Route::post('/inventory/import', [SmsAdminController::class, 'importInventory'])->name('inventory.import');

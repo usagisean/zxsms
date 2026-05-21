@@ -14,20 +14,28 @@
 </head>
 <body>
 @php
-$navItems = [
-    ['label'=>'概览','route'=>'sms.admin.dashboard'],
-    ['label'=>'配置','route'=>'sms.admin.settings'],
-    ['label'=>'服务管理','route'=>'sms.admin.services'],
-    ['label'=>'国家管理','route'=>'sms.admin.countries'],
-    ['label'=>'价格','route'=>'sms.admin.prices'],
-    ['label'=>'号码库存','route'=>'sms.admin.inventory'],
-    ['label'=>'首页轮播','route'=>'sms.admin.home-slides'],
-    ['label'=>'充值档位','route'=>'sms.admin.recharge-plans'],
-    ['label'=>'用户管理','route'=>'sms.admin.users'],
-    ['label'=>'充值订单','route'=>'sms.admin.recharges'],
-    ['label'=>'余额流水','route'=>'sms.admin.wallet-logs'],
-    ['label'=>'接码订单','route'=>'sms.admin.orders'],
-    ['label'=>'API 日志','route'=>'sms.admin.logs'],
+$navGroups = [
+    '核心业务' => [
+        ['label'=>'概览','route'=>'sms.admin.dashboard'],
+        ['label'=>'号码与库存','route'=>'sms.admin.inventory'],
+        ['label'=>'商品展示设置','route'=>'sms.admin.prices'],
+        ['label'=>'接码订单','route'=>'sms.admin.orders'],
+    ],
+    '财务与用户' => [
+        ['label'=>'用户管理','route'=>'sms.admin.users'],
+        ['label'=>'充值订单','route'=>'sms.admin.recharges'],
+        ['label'=>'余额流水','route'=>'sms.admin.wallet-logs'],
+    ],
+    '系统' => [
+        ['label'=>'全局配置','route'=>'sms.admin.settings'],
+        ['label'=>'充值档位','route'=>'sms.admin.recharge-plans'],
+        // 下面这些是以前 HeroSMS 对接 API 专用的，暂时隐藏以免干扰
+        // ['label'=>'服务管理','route'=>'sms.admin.services'],
+        // ['label'=>'国家管理','route'=>'sms.admin.countries'],
+        // ['label'=>'同步价格','route'=>'sms.admin.prices'],
+        // ['label'=>'API 日志','route'=>'sms.admin.logs'],
+        // ['label'=>'首页轮播','route'=>'sms.admin.home-slides'],
+    ]
 ];
 @endphp
 <div class="admin-shell">
@@ -35,10 +43,14 @@ $navItems = [
         <div class="sidebar-inner">
             <div class="brand"><div class="brand-logo">✦</div><div class="brand-title"><b>ZXAIHUB SMS</b><span>Admin Console</span></div></div>
             <nav class="nav">
-                @foreach($navItems as $item)
-                    <a class="{{ request()->routeIs($item['route']) ? 'active' : '' }}" href="{{ route($item['route']) }}"><span>{{ $item['label'] }}</span></a>
+                @foreach($navGroups as $groupName => $items)
+                    <div class="nav-group-label" style="font-size:11px; font-weight:700; color:var(--muted); letter-spacing:0.1em; padding:16px 12px 6px; text-transform:uppercase;">{{ $groupName }}</div>
+                    @foreach($items as $item)
+                        <a style="min-height:36px; padding:8px 12px; font-weight:600; font-size:13px;" class="{{ request()->routeIs($item['route']) ? 'active' : '' }}" href="{{ route($item['route']) }}"><span>{{ $item['label'] }}</span></a>
+                    @endforeach
                 @endforeach
-                <a href="{{ route('sms.index') }}">前台</a>
+                <div class="nav-group-label" style="font-size:11px; font-weight:700; color:var(--muted); letter-spacing:0.1em; padding:16px 12px 6px; text-transform:uppercase;">其它</div>
+                <a style="min-height:36px; padding:8px 12px; font-weight:600; font-size:13px;" href="{{ route('sms.index') }}" target="_blank">前台 ↗</a>
             </nav>
         </div>
     </aside>

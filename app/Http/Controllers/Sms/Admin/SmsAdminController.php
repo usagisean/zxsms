@@ -192,6 +192,27 @@ class SmsAdminController extends Controller
         return view('sms.admin.prices', ['prices' => $query->paginate(80)]);
     }
 
+    public function savePrice(Request $request, SmsPrice $price)
+    {
+        $data = $request->validate([
+            'title' => ['nullable', 'string', 'max:255'],
+            'description' => ['nullable', 'string', 'max:500'],
+            'base_sold_count' => ['nullable', 'integer', 'min:0'],
+            'max_quantity' => ['nullable', 'integer', 'min:1'],
+            'is_available' => ['nullable', 'boolean'],
+        ]);
+        
+        $price->fill([
+            'title' => $data['title'],
+            'description' => $data['description'],
+            'base_sold_count' => $data['base_sold_count'] ?? 0,
+            'max_quantity' => $data['max_quantity'] ?? 10,
+            'is_available' => $request->boolean('is_available'),
+        ])->save();
+        
+        return back()->with('ok', '商品前台展示信息已更新');
+    }
+
     public function syncPrices(Request $request, SmsPriceService $priceService)
     {
         $result = $priceService->syncAll($request->input('service') ?: null, $request->input('country') ?: null);

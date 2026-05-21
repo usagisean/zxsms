@@ -1,24 +1,27 @@
 @extends('sms.admin.layout')
-@section('title','价格')
-@section('subtitle','前台展示缓存价格；库存模式下来自“号码库存”的可售数量和售价。')
-@section('actions')<a class="btn secondary" href="{{ route('sms.admin.settings') }}">统一定价</a>@endsection
+@section('title','前台商品设置')
+@section('subtitle','自定义前台销售网格中每个商品的标题、简介、虚拟销量与限购数量。')
 @section('content')
 <div class="card">
-    <div class="section-title"><h2>价格同步</h2><span class="badge">库存 / Provider</span></div>
-    <form method="post" action="{{ route('sms.admin.prices.sync') }}" class="grid3">@csrf
-        <div class="form-row"><label>服务 code（可空）</label><input name="service" value="{{ request('service') }}" placeholder="如 go / tg"></div>
-        <div class="form-row"><label>国家 id（可空）</label><input name="country" value="{{ request('country') }}" placeholder="如 0"></div>
-        <div style="align-self:end"><button>同步价格</button></div>
-    </form>
-</div>
-<div class="card">
+    <div class="section-title"><h2>商品展示配置</h2><span class="badge">实时生效</span></div>
     <div class="table-wrap"><table class="table">
-        <thead><tr><th>服务</th><th>国家</th><th>成本USD</th><th>售价CNY</th><th>库存</th><th>状态</th><th>同步时间</th></tr></thead>
-        <tbody>@forelse($prices as $p)<tr>
-            <td><b>{{ $p->service->name ?? '-' }}</b><br><span class="mono muted">{{ $p->provider_service_code }}</span></td>
-            <td>{{ $p->country->name ?? '-' }}<br><span class="mono muted">{{ $p->provider_country_id }}</span></td>
-            <td class="mono">${{ $p->cost_usd }}</td><td><b>¥{{ $p->sale_price }}</b></td><td>{{ $p->stock_count }}</td><td><span class="badge">{{ $p->is_available ? '显示':'隐藏' }}</span></td><td>{{ optional($p->synced_at)->toDateTimeString() }}</td>
-        </tr>@empty<tr><td colspan="7" class="empty">暂无价格，请先导入号码库存并同步价格。</td></tr>@endforelse</tbody>
+        <thead><tr><th style="min-width:140px;">商品 / 国家</th><th style="min-width:180px;">自定义标题</th><th style="min-width:240px;">简介说明</th><th style="min-width:80px;">基础销量</th><th style="min-width:80px;">单次限购</th><th>显示/保存</th></tr></thead>
+        <tbody>@forelse($prices as $p)
+        <tr>
+            <form method="post" action="{{ route('sms.admin.prices.save', $p->id) }}">
+                @csrf
+                <td><b>{{ $p->service->name ?? '-' }}</b><br><span class="muted">{{ $p->country->name ?? '-' }} (库存: {{ $p->stock_count }})</span><br><span class="muted">售价 ¥{{ $p->sale_price }}</span></td>
+                <td><input name="title" value="{{ $p->title }}" placeholder="如不填则默认"></td>
+                <td><textarea name="description" rows="2" placeholder="如不填则显示系统多语言默认描述" style="min-height:50px;">{{ $p->description }}</textarea></td>
+                <td><input name="base_sold_count" type="number" value="{{ $p->base_sold_count }}" min="0" style="width:80px;"></td>
+                <td><input name="max_quantity" type="number" value="{{ $p->max_quantity ?: 10 }}" min="1" style="width:80px;"></td>
+                <td>
+                    <label class="check" style="margin-bottom:8px;"><input type="checkbox" name="is_available" value="1" {{ $p->is_available ? 'checked' : '' }}> 显示</label><br>
+                    <button type="submit" class="small">保存</button>
+                </td>
+            </form>
+        </tr>
+        @empty<tr><td colspan="6" class="empty">暂无商品。请先在【号码库存】导入数据，它会自动生成这里的商品。</td></tr>@endforelse</tbody>
     </table></div>
     {{ $prices->links() }}
 </div>
