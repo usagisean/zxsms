@@ -47,6 +47,7 @@ class SmsController extends Controller
             'payment_method' => ['required', 'string', 'max:60'],
             'email' => ['nullable', 'email', 'max:190'],
             'query_password' => ['nullable', 'string', 'max:80'],
+            'quantity' => ['nullable', 'integer', 'min:1', 'max:50'],
         ]);
 
         try {
@@ -56,11 +57,18 @@ class SmsController extends Controller
                     $data['email'] = $request->user()->email;
                 }
             }
-            $result = $this->orders->createOrder($data, $request->ip());
+            $result = $this->orders->createBatchOrders($data, $request->ip());
             if (! empty($result['changed'])) {
                 return back()->withInput()->with('quote_changed', $result['message'])->with('new_price', $result['new_price']);
             }
-            return redirect()->route('sms.order.show', ['token' => $result['order']->token]);
+            
+            $orders = $result['orders'];
+            if ($orders->count() > 1) {
+                return redirect()->route('sms.account.numbers')->with('ok', "成功购买了 {$orders->count()} 个号码，可以在列表查看详情。");
+            }
+            
+            $order = $orders->first();
+            return redirect()->route('sms.order.show', ['token' => $order->token]);
         } catch (RuntimeException $e) {
             return back()->withInput()->withErrors(['order' => $e->getMessage()]);
         }
@@ -72,11 +80,12 @@ class SmsController extends Controller
         return view('sms.order', compact('order'));
     }
 
-    public function orderStatus($token)
+    public function orderStatus(Request $request, $token)
     {
         $order = SmsOrder::with(['service', 'country', 'latestPayment'])->where('token', $token)->firstOrFail();
-        if ($order->status === SmsOrder::STATUS_WAITING_CODE) {
-            $order = $this->orders->pollCode($order);
+        $isInventory = strpos((string) $order->provider_activation_id, 'inventory:') === 0;
+        if ($order->status === SmsOrder::STATUS_WAITING_CODE || ($isInventory && $order->status === SmsOrder::STATUS_COMPLETED && $request->boolean('force'))) {
+            $order = $this->orders->pollCode($order, $request->boolean('force'));
         } elseif ($order->status === SmsOrder::STATUS_PAID) {
             $order = $this->orders->purchaseNumber($order)->fresh(['service', 'country', 'latestPayment']);
         }
@@ -121,7 +130,17 @@ class SmsController extends Controller
             'query_password' => ['nullable', 'string', 'max:80'],
         ]);
 
-        $orders = $this->orders->findForQuery($data['order_sn'] ?? null, $data['email'] ?? null, $data['query_password'] ?? null);
+        if (empty($data['order_sn']) && empty($data['email']) && $request->user()) {
+            $data['email'] = $request->user()->email;
+        }
+        if (! empty($data['email']) && empty($data['order_sn']) && ! $request->user()) {
+            return back()->withInput()->withErrors(['query' => '邮箱批量查询需要先登录对应账号；未登录时请使用订单号查询。']);
+        }
+        if (! empty($data['email']) && $request->user() && strcasecmp($data['email'], $request->user()->email) !== 0) {
+            return back()->withInput()->withErrors(['query' => '只能查询当前登录邮箱下的订单。']);
+        }
+
+        $orders = $this->orders->findForQuery($data['order_sn'] ?? null, $data['email'] ?? null, $data['query_password'] ?? null, $request->user());
         return view('sms.query', compact('orders'));
     }
 

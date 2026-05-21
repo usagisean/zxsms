@@ -1,6 +1,6 @@
 @extends('sms.admin.layout')
 @section('title','服务管理')
-@section('subtitle','服务来自 HeroSMS 同步；可控制前台展示、推荐排序，也可对单个服务覆盖统一定价。')
+@section('subtitle','服务来自库存导入或旧上游同步；可控制前台展示、推荐排序，也可对单个服务覆盖统一定价。')
 @section('content')
 <div class="card">
     <form class="grid3"><div class="form-row" style="grid-column:1 / span 2"><label>搜索</label><input name="q" value="{{ request('q') }}" placeholder="搜索名称或 code"></div><div style="align-self:end"><button>筛选</button></div></form>

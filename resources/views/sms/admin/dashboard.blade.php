@@ -1,5 +1,5 @@
 @extends('sms.admin.layout')
-@section('title','HeroSMS 后台')
+@section('title','接码站后台')
 @section('subtitle','独立接码站后台；充值、接码和原发卡网订单完全分离。')
 @section('actions')<a class="btn secondary" href="{{ route('sms.index') }}">打开前台</a><a class="btn" href="{{ route('sms.admin.prices') }}">同步价格</a>@endsection
 @section('content')
@@ -15,6 +15,6 @@
 </div>
 <div class="card" style="margin-top:18px">
     <div class="section-title"><h2>运营说明</h2><span class="badge">Balance Mode</span></div>
-    <p class="help">用户优先充值到余额，购买号码时实时确认 HeroSMS 成本并扣余额；取号失败、无码、无库存或超时会自动退回余额。统一价格规则在“配置”里设置，服务/国家的覆盖规则只有填写后才生效。</p>
+    <p class="help">用户先充值到余额，购买号码时确认库存并扣余额；库存不足、发货失败或未发货会自动退回余额。统一价格和库存在后台维护。</p>
 </div>
 @endsection

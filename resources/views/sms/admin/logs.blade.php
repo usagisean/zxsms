@@ -1,6 +1,6 @@
 @extends('sms.admin.layout')
 @section('title','API 日志')
-@section('subtitle','HeroSMS 请求和响应日志，用于排查同步价格、取号和查码问题。')
+@section('subtitle','上游/库存取码请求日志，用于排查同步价格、发货和查码问题。')
 @section('content')
 <div class="card">
     <form class="grid3">

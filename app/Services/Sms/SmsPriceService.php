@@ -3,6 +3,7 @@
 namespace App\Services\Sms;
 
 use App\Models\Sms\SmsCountry;
+use App\Models\Sms\SmsInventoryCard;
 use App\Models\Sms\SmsPrice;
 use App\Models\Sms\SmsService;
 use Carbon\Carbon;
@@ -118,6 +119,10 @@ class SmsPriceService
 
     public function syncAll($serviceCode = null, $countryId = null)
     {
+        if ($this->activeProvider() === 'inventory') {
+            return $this->syncInventoryCatalog($serviceCode, $countryId);
+        }
+
         $countries = $this->syncCountries();
         $services = $this->syncServices($countryId);
         $prices = 0;
@@ -147,6 +152,12 @@ class SmsPriceService
         $price = SmsPrice::with(['service', 'country'])
             ->where('provider_service_code', $serviceCode)
             ->where('provider_country_id', (int) $countryProviderId)
+            ->when($this->activeProvider() === 'inventory', function ($query) {
+                $query->where('operator', 'inventory');
+            })
+            ->when($this->activeProvider() !== 'inventory', function ($query) {
+                $query->where('operator', '<>', 'inventory');
+            })
             ->where('is_available', true)
             ->orderBy('sale_price')
             ->first();
@@ -164,6 +175,10 @@ class SmsPriceService
 
     public function getLiveQuote($serviceCode, $countryProviderId)
     {
+        if ($this->activeProvider() === 'inventory') {
+            return $this->getInventoryQuote($serviceCode, $countryProviderId);
+        }
+
         $service = SmsService::where('provider_code', $serviceCode)->first();
         $country = SmsCountry::where('provider_id', (int) $countryProviderId)->first();
         if (! $service || ! $country) {
@@ -204,17 +219,24 @@ class SmsPriceService
 
     public function publicCatalog()
     {
-        $prices = SmsPrice::with(['service', 'country'])
+        $query = SmsPrice::with(['service', 'country'])
             ->where('is_available', true)
-            ->where('stock_count', '>', 0)
-            ->orderBy('sale_price')
+            ->where('stock_count', '>', 0);
+
+        if ($this->activeProvider() === 'inventory') {
+            $query->where('operator', 'inventory');
+        } else {
+            $query->where('operator', '<>', 'inventory');
+        }
+
+        $prices = $query->orderBy('sale_price')
             ->get()
             ->filter(function (SmsPrice $price) {
                 return $price->service && $price->country
                     && $price->service->is_enabled
                     && $price->country->is_enabled
                     && $price->country->provider_visible
-                    && (float) $price->cost_usd > 0;
+                    && ((float) $price->cost_usd > 0 || $price->operator === 'inventory');
             });
 
         $services = [];
@@ -238,6 +260,10 @@ class SmsPriceService
                     'price' => (float) $price->sale_price,
                     'stock' => (int) $price->stock_count,
                     'synced_at' => optional($price->synced_at)->toDateTimeString(),
+                    'title' => $price->title,
+                    'description' => $price->description,
+                    'sold_count' => (int) $price->base_sold_count,
+                    'max_quantity' => (int) ($price->max_quantity ?: 10),
                 ];
             }
         }
@@ -256,6 +282,188 @@ class SmsPriceService
             'services' => array_values($services),
             'countriesByService' => $countriesByService,
         ];
+    }
+
+
+    public function syncInventoryCatalog($serviceCode = null, $countryId = null)
+    {
+        $minValidUntil = $this->inventoryMinValidityDate();
+        $query = SmsInventoryCard::query()->where('status', SmsInventoryCard::STATUS_AVAILABLE);
+        $query->where(function ($q) use ($minValidUntil) {
+            $q->whereNull('valid_until')->orWhereDate('valid_until', '>=', $minValidUntil);
+        });
+        if ($serviceCode) {
+            $query->where('service_code', (string) $serviceCode);
+        }
+        if ($countryId !== null && $countryId !== '') {
+            $query->where('country_code', (int) $countryId);
+        }
+
+        $cards = $query->get();
+        $groups = [];
+        foreach ($cards as $card) {
+            $key = $card->service_code . '|' . (int) $card->country_code;
+            if (! isset($groups[$key])) {
+                $groups[$key] = [
+                    'service_code' => $card->service_code,
+                    'service_name' => $card->service_name ?: $card->service_code,
+                    'country_code' => (int) $card->country_code,
+                    'country_name' => $card->country_name ?: (string) $card->country_code,
+                    'count' => 0,
+                    'min_sale' => null,
+                    'min_cost_cny' => null,
+                ];
+            }
+            $groups[$key]['count']++;
+            $sale = (float) $card->sale_price;
+            $cost = (float) $card->cost_cny;
+            if ($groups[$key]['min_sale'] === null || $sale < $groups[$key]['min_sale']) {
+                $groups[$key]['min_sale'] = $sale;
+            }
+            if ($groups[$key]['min_cost_cny'] === null || $cost < $groups[$key]['min_cost_cny']) {
+                $groups[$key]['min_cost_cny'] = $cost;
+            }
+        }
+
+        $now = Carbon::now();
+        $countryCount = 0;
+        $serviceCount = 0;
+        $priceCount = 0;
+        $seenServices = [];
+        $seenCountries = [];
+        $exchangeRate = max(0.0001, $this->settingFloat('exchange_rate', 'sms.pricing.exchange_rate'));
+
+        DB::beginTransaction();
+        try {
+            foreach ($groups as $group) {
+                $service = SmsService::updateOrCreate(
+                    ['provider_code' => (string) $group['service_code']],
+                    ['name' => (string) $group['service_name'], 'raw' => ['provider' => 'inventory']]
+                );
+                if (! isset($seenServices[$service->id])) {
+                    $seenServices[$service->id] = true;
+                    $serviceCount++;
+                }
+
+                $country = SmsCountry::updateOrCreate(
+                    ['provider_id' => (int) $group['country_code']],
+                    [
+                        'name' => (string) $group['country_name'],
+                        'name_en' => (string) $group['country_name'],
+                        'name_cn' => (string) $group['country_name'],
+                        'provider_visible' => true,
+                        'raw' => ['provider' => 'inventory'],
+                    ]
+                );
+                if (! isset($seenCountries[$country->id])) {
+                    $seenCountries[$country->id] = true;
+                    $countryCount++;
+                }
+
+                $costCny = (float) ($group['min_cost_cny'] ?: 0);
+                $salePrice = (float) ($group['min_sale'] ?: 0);
+                SmsPrice::updateOrCreate(
+                    [
+                        'provider_service_code' => (string) $group['service_code'],
+                        'provider_country_id' => (int) $group['country_code'],
+                        'operator' => 'inventory',
+                    ],
+                    [
+                        'service_id' => $service->id,
+                        'country_id' => $country->id,
+                        'cost_usd' => round($costCny / $exchangeRate, 4),
+                        'stock_count' => (int) $group['count'],
+                        'sale_price' => $salePrice,
+                        'is_available' => $group['count'] > 0 && $salePrice > 0,
+                        'synced_at' => $now,
+                        'raw' => ['provider' => 'inventory', 'cost_cny' => $costCny],
+                    ]
+                );
+                $priceCount++;
+            }
+            SmsPrice::where('operator', 'inventory')
+                ->when($serviceCode, function ($query) use ($serviceCode) {
+                    $query->where('provider_service_code', $serviceCode);
+                })
+                ->when($countryId !== null && $countryId !== '', function ($query) use ($countryId) {
+                    $query->where('provider_country_id', (int) $countryId);
+                })
+                ->where(function ($query) use ($now) {
+                    $query->whereNull('synced_at')->orWhere('synced_at', '<>', $now);
+                })
+                ->update(['is_available' => false, 'stock_count' => 0]);
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            throw $e;
+        }
+
+        return ['countries' => $countryCount, 'services' => $serviceCount, 'prices' => $priceCount];
+    }
+
+    private function getInventoryQuote($serviceCode, $countryProviderId)
+    {
+        $service = SmsService::where('provider_code', $serviceCode)->first();
+        $country = SmsCountry::where('provider_id', (int) $countryProviderId)->first();
+        if (! $service || ! $country) {
+            $this->syncInventoryCatalog($serviceCode, $countryProviderId);
+            $service = SmsService::where('provider_code', $serviceCode)->first();
+            $country = SmsCountry::where('provider_id', (int) $countryProviderId)->first();
+        }
+        if (! $service || ! $country) {
+            throw new RuntimeException('该商品不存在或暂无库存');
+        }
+        if (! $service->is_enabled || ! $country->is_enabled || ! $country->provider_visible) {
+            throw new RuntimeException('该商品暂不可下单');
+        }
+
+        $cards = SmsInventoryCard::where('service_code', $serviceCode)
+            ->where('country_code', (int) $countryProviderId)
+            ->where('status', SmsInventoryCard::STATUS_AVAILABLE)
+            ->where(function ($q) {
+                $q->whereNull('valid_until')->orWhereDate('valid_until', '>=', $this->inventoryMinValidityDate());
+            })
+            ->orderBy('sale_price')
+            ->get();
+
+        if ($cards->isEmpty()) {
+            $this->markUnavailable($serviceCode, (int) $countryProviderId);
+            throw new RuntimeException('当前商品暂无库存');
+        }
+
+        $card = $cards->first();
+        $exchangeRate = max(0.0001, $this->settingFloat('exchange_rate', 'sms.pricing.exchange_rate'));
+        $costCny = (float) $card->cost_cny;
+        $pricing = [
+            'cost_usd' => round($costCny / $exchangeRate, 4),
+            'cost_cny' => round($costCny, 2),
+            'exchange_rate' => round($exchangeRate, 4),
+            'markup_multiplier' => 1,
+            'fixed_fee' => 0,
+            'min_profit' => round(max(0, (float) $card->sale_price - $costCny), 2),
+            'min_price' => round((float) $card->sale_price, 2),
+            'sale_price' => round((float) $card->sale_price, 2),
+        ];
+
+        $price = SmsPrice::updateOrCreate(
+            [
+                'provider_service_code' => (string) $serviceCode,
+                'provider_country_id' => (int) $countryProviderId,
+                'operator' => 'inventory',
+            ],
+            [
+                'service_id' => $service->id,
+                'country_id' => $country->id,
+                'cost_usd' => $pricing['cost_usd'],
+                'stock_count' => $cards->count(),
+                'sale_price' => $pricing['sale_price'],
+                'is_available' => true,
+                'synced_at' => now(),
+                'raw' => ['provider' => 'inventory', 'cost_cny' => $costCny],
+            ]
+        );
+
+        return [$price, $pricing, ['provider' => 'inventory', 'stock' => $cards->count(), 'card_id' => $card->id]];
     }
 
     private function persistPrices($payload, $serviceCode = null, $countryId = null)
@@ -550,5 +758,17 @@ class SmsPriceService
     private function settingFloat($shortKey, $configKey)
     {
         return (float) app(SmsSettingService::class)->get('pricing_' . $shortKey, config($configKey));
+    }
+
+
+    private function activeProvider()
+    {
+        return (string) app(SmsSettingService::class)->get('sms_provider', config('sms.provider', 'inventory'));
+    }
+
+    private function inventoryMinValidityDate()
+    {
+        $days = max(1, (int) app(SmsSettingService::class)->get('product_min_validity_days', 30));
+        return Carbon::today()->addDays($days)->toDateString();
     }
 }

@@ -9,7 +9,7 @@ class SmsPrice extends Model
     protected $fillable = [
         'service_id', 'country_id', 'provider_service_code', 'provider_country_id',
         'operator', 'cost_usd', 'stock_count', 'sale_price', 'is_available',
-        'synced_at', 'raw',
+        'synced_at', 'raw', 'title', 'description', 'base_sold_count', 'max_quantity',
     ];
 
     protected $casts = [

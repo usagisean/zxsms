@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Sms\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Models\Sms\SmsCountry;
 use App\Models\Sms\SmsHomeSlide;
+use App\Models\Sms\SmsInventoryCard;
 use App\Models\Sms\SmsOrder;
 use App\Models\Sms\SmsPrice;
 use App\Models\Sms\SmsProviderLog;
@@ -14,7 +16,9 @@ use App\Models\Sms\SmsService;
 use App\Models\Sms\SmsWalletLog;
 use App\Services\Sms\SmsPriceService;
 use App\Services\Sms\SmsSettingService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class SmsAdminController extends Controller
 {
@@ -45,6 +49,17 @@ class SmsAdminController extends Controller
     public function saveSettings(Request $request, SmsSettingService $settings)
     {
         $plain = [
+            'sms_provider' => ['type' => 'string', 'group' => 'provider'],
+            'site_name' => ['type' => 'string', 'group' => 'site'],
+            'site_domain' => ['type' => 'string', 'group' => 'site'],
+            'site_footer_desc' => ['type' => 'string', 'group' => 'site'],
+            'support_tg_url' => ['type' => 'string', 'group' => 'contact'],
+            'support_tg_label' => ['type' => 'string', 'group' => 'contact'],
+            'community_tg_url' => ['type' => 'string', 'group' => 'contact'],
+            'community_tg_label' => ['type' => 'string', 'group' => 'contact'],
+            'product_validity_days' => ['type' => 'int', 'group' => 'product'],
+            'product_min_validity_days' => ['type' => 'int', 'group' => 'product'],
+            'product_long_term_note' => ['type' => 'string', 'group' => 'product'],
             'herosms_base_url' => ['type' => 'string', 'group' => 'herosms'],
             'pricing_exchange_rate' => ['type' => 'float', 'group' => 'pricing'],
             'pricing_markup_multiplier' => ['type' => 'float', 'group' => 'pricing'],
@@ -54,7 +69,17 @@ class SmsAdminController extends Controller
         ];
         foreach ($plain as $key => $meta) {
             if ($request->has($key)) {
-                $settings->set($key, $request->input($key), $meta['type'], false, $meta['group']);
+                $value = $request->input($key);
+                if ($key === 'sms_provider' && ! in_array($value, ['inventory', 'herosms'], true)) {
+                    $value = 'inventory';
+                }
+                if (in_array($key, ['support_tg_url', 'community_tg_url'], true) && $value !== '' && ! preg_match('#^https?://#i', (string) $value)) {
+                    $value = 'https://t.me/' . ltrim((string) $value, '@/');
+                }
+                if (in_array($key, ['product_validity_days', 'product_min_validity_days'], true)) {
+                    $value = max(1, (int) $value);
+                }
+                $settings->set($key, $value, $meta['type'], false, $meta['group']);
             }
         }
 
@@ -76,6 +101,15 @@ class SmsAdminController extends Controller
             $secretKey = 'payment_' . $code . '_merchant_secret';
             if ($request->filled($secretKey)) {
                 $settings->set($secretKey, $request->input($secretKey), 'string', true, 'payment');
+            }
+        }
+
+        if ($settings->get('sms_provider', config('sms.provider', 'inventory')) === 'inventory'
+            && ($request->has('product_validity_days') || $request->has('product_min_validity_days') || $request->has('sms_provider'))) {
+            try {
+                app(SmsPriceService::class)->syncInventoryCatalog();
+            } catch (\Throwable $e) {
+                // 配置保存不应被库存刷新失败阻断，后台可在“号码库存”里手动刷新。
             }
         }
 
@@ -173,8 +207,12 @@ class SmsAdminController extends Controller
         if ($request->filled('q')) {
             $query->where(function ($q) use ($request) {
                 $q->where('order_sn', 'like', '%' . $request->q . '%')
+                    ->orWhere('email', 'like', '%' . $request->q . '%')
                     ->orWhere('phone_number', 'like', '%' . $request->q . '%')
-                    ->orWhere('provider_activation_id', 'like', '%' . $request->q . '%');
+                    ->orWhere('provider_activation_id', 'like', '%' . $request->q . '%')
+                    ->orWhereHas('user', function ($userQuery) use ($request) {
+                        $userQuery->where('email', 'like', '%' . $request->q . '%');
+                    });
             });
         }
         return view('sms.admin.orders', ['orders' => $query->paginate(50)]);
@@ -249,6 +287,23 @@ class SmsAdminController extends Controller
         return back()->with('ok', '充值档位已保存');
     }
 
+
+    public function users(Request $request)
+    {
+        $query = User::with('smsWallet')
+            ->withCount(['smsOrders', 'smsRechargeOrders'])
+            ->orderByDesc('created_at');
+
+        if ($request->filled('q')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('email', 'like', '%' . $request->q . '%')
+                    ->orWhere('name', 'like', '%' . $request->q . '%');
+            });
+        }
+
+        return view('sms.admin.users', ['users' => $query->paginate(50)]);
+    }
+
     public function recharges(Request $request)
     {
         $query = SmsRechargeOrder::with(['user', 'plan'])->orderByDesc('created_at');
@@ -279,12 +334,142 @@ class SmsAdminController extends Controller
         return view('sms.admin.wallet_logs', ['logs' => $query->paginate(80)]);
     }
 
+
+    public function inventory(Request $request)
+    {
+        $query = SmsInventoryCard::with(['user', 'order'])->orderByDesc('created_at');
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        if ($request->filled('q')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('cdk_code', 'like', '%' . $request->q . '%')
+                    ->orWhere('service_name', 'like', '%' . $request->q . '%')
+                    ->orWhere('service_code', 'like', '%' . $request->q . '%')
+                    ->orWhere('phone_number', 'like', '%' . $request->q . '%');
+            });
+        }
+
+        $settings = app(SmsSettingService::class);
+        $defaultValidityDays = max(1, (int) $settings->get('product_validity_days', 60));
+        $minValidityDays = max(1, (int) $settings->get('product_min_validity_days', 30));
+
+        return view('sms.admin.inventory', [
+            'cards' => $query->paginate(50),
+            'defaultValidityDays' => $defaultValidityDays,
+            'minValidityDays' => $minValidityDays,
+            'defaultValidUntil' => now()->addDays($defaultValidityDays)->toDateString(),
+            'stats' => [
+                'available' => SmsInventoryCard::where('status', SmsInventoryCard::STATUS_AVAILABLE)->count(),
+                'sold' => SmsInventoryCard::where('status', SmsInventoryCard::STATUS_SOLD)->count(),
+                'expired' => SmsInventoryCard::where('status', SmsInventoryCard::STATUS_EXPIRED)->count(),
+                'disabled' => SmsInventoryCard::where('status', SmsInventoryCard::STATUS_DISABLED)->count(),
+            ],
+        ]);
+    }
+
+    public function importInventory(Request $request, SmsPriceService $priceService)
+    {
+        $data = $request->validate([
+            'service_code' => ['required', 'string', 'max:60'],
+            'service_name' => ['required', 'string', 'max:120'],
+            'country_code' => ['required', 'integer'],
+            'country_name' => ['required', 'string', 'max:120'],
+            'cost_cny' => ['nullable', 'numeric', 'min:0'],
+            'sale_price' => ['required', 'numeric', 'min:0.01'],
+            'valid_until' => ['nullable', 'date'],
+            'lines' => ['required', 'string'],
+        ]);
+
+        $created = 0;
+        $skipped = 0;
+        $settings = app(SmsSettingService::class);
+        $defaultValidityDays = max(1, (int) $settings->get('product_validity_days', 60));
+        $minValidityDays = max(1, (int) $settings->get('product_min_validity_days', 30));
+        $defaultValidUntil = now()->addDays($defaultValidityDays)->toDateString();
+        $minValidUntil = Carbon::today()->addDays($minValidityDays);
+        $lines = preg_split('/\r\n|\r|\n/', $data['lines']);
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if ($line === '') {
+                continue;
+            }
+            $parts = array_map('trim', explode('|', $line));
+            if (count($parts) < 2) {
+                $skipped++;
+                continue;
+            }
+            // 推荐格式：+手机号|取码URL。也兼容：平台code|平台名|+手机号|取码URL|售价|有效期
+            $serviceCode = (string) $data['service_code'];
+            $serviceName = (string) $data['service_name'];
+            $countryCode = (int) $data['country_code'];
+            $countryName = (string) $data['country_name'];
+            $phone = $parts[0] ?? '';
+            $url = $parts[1] ?? '';
+            $salePrice = (float) $data['sale_price'];
+            $costCny = (float) ($data['cost_cny'] ?? 0);
+            $validUntil = $data['valid_until'] ?? $defaultValidUntil;
+
+            if (count($parts) >= 4 && filter_var($parts[3], FILTER_VALIDATE_URL)) {
+                $serviceCode = $parts[0] ?: $serviceCode;
+                $serviceName = $parts[1] ?: $serviceName;
+                $phone = $parts[2] ?? '';
+                $url = $parts[3] ?? '';
+                if (isset($parts[4]) && is_numeric($parts[4])) {
+                    $salePrice = (float) $parts[4];
+                }
+                if (isset($parts[5]) && strtotime($parts[5])) {
+                    $validUntil = $parts[5];
+                }
+            }
+
+            $validUntilDate = Carbon::parse($validUntil)->startOfDay();
+            if ($validUntilDate->lt($minValidUntil)) {
+                $skipped++;
+                continue;
+            }
+            if ($phone === '' || ! filter_var($url, FILTER_VALIDATE_URL)) {
+                $skipped++;
+                continue;
+            }
+            if (SmsInventoryCard::where('phone_number', $phone)->whereIn('status', [SmsInventoryCard::STATUS_AVAILABLE, SmsInventoryCard::STATUS_SOLD])->exists()) {
+                $skipped++;
+                continue;
+            }
+
+            SmsInventoryCard::create([
+                'cdk_code' => $this->makeInventoryCode($serviceCode),
+                'service_code' => $serviceCode,
+                'service_name' => $serviceName,
+                'country_code' => $countryCode,
+                'country_name' => $countryName,
+                'phone_number' => $phone,
+                'sms_url' => $url,
+                'cost_cny' => $costCny,
+                'sale_price' => $salePrice,
+                'status' => SmsInventoryCard::STATUS_AVAILABLE,
+                'valid_until' => $validUntilDate->toDateString(),
+                'raw' => ['import_line' => $line],
+            ]);
+            $created++;
+        }
+
+        $priceService->syncInventoryCatalog();
+        return back()->with('ok', '导入完成：新增 ' . $created . ' 条，跳过 ' . $skipped . ' 条；已刷新前台库存价格。');
+    }
+
+    public function syncInventory(SmsPriceService $priceService)
+    {
+        $result = $priceService->syncInventoryCatalog();
+        return back()->with('ok', '库存价格已刷新：国家 ' . $result['countries'] . '，服务 ' . $result['services'] . '，价格 ' . $result['prices']);
+    }
+
     public function homeSlides()
     {
         if (SmsHomeSlide::count() === 0) {
             foreach ([
                 ['badge' => 'ZXAIHUB SMS', 'title' => '充值余额，自动接收验证码', 'description' => '选择平台和国家，下单前实时确认成本；扣余额后自动取号、自动等待验证码。', 'image_url' => '/images/home/slide-1.jpg', 'card_title' => '接码流程', 'card_value' => '4 步', 'card_description' => '充值 → 选择 → 取号 → 收码', 'sort_order' => 10],
-                ['badge' => '余额模式', 'title' => '没收到验证码，自动退回余额', 'description' => 'HeroSMS 无库存、取号失败、成本异常或超时未收到验证码，系统自动退回用户余额。', 'image_url' => '/images/home/slide-2.jpg', 'card_title' => '退款状态', 'card_value' => '自动', 'card_description' => '记录完整余额流水', 'sort_order' => 20],
+                ['badge' => '余额模式', 'title' => '没收到验证码，自动退回余额', 'description' => '库存不足、发货失败或取码异常时，系统会自动退回用户余额。', 'image_url' => '/images/home/slide-2.jpg', 'card_title' => '退款状态', 'card_value' => '自动', 'card_description' => '记录完整余额流水', 'sort_order' => 20],
             ] as $slide) {
                 SmsHomeSlide::create($slide + ['is_enabled' => true]);
             }
@@ -324,6 +509,15 @@ class SmsAdminController extends Controller
     }
 
 
+
+    private function makeInventoryCode($serviceCode)
+    {
+        do {
+            $code = 'SMS-' . strtoupper(preg_replace('/[^A-Za-z0-9]+/', '', (string) $serviceCode)) . '-' . strtoupper(Str::random(4)) . '-' . strtoupper(Str::random(6));
+        } while (SmsInventoryCard::where('cdk_code', $code)->exists());
+        return $code;
+    }
+
     private function paymentSettingValues(SmsSettingService $settings)
     {
         $methods = config('sms.payments', []);
@@ -342,6 +536,17 @@ class SmsAdminController extends Controller
     private function settingValues(SmsSettingService $settings)
     {
         return [
+            'sms_provider' => $settings->get('sms_provider', config('sms.provider', 'inventory')),
+            'site_name' => $settings->get('site_name', __('sms.brand')),
+            'site_domain' => $settings->get('site_domain', __('sms.domain')),
+            'site_footer_desc' => $settings->get('site_footer_desc', __('sms.footer.desc')),
+            'support_tg_url' => $settings->get('support_tg_url', ''),
+            'support_tg_label' => $settings->get('support_tg_label', 'TG 客服'),
+            'community_tg_url' => $settings->get('community_tg_url', ''),
+            'community_tg_label' => $settings->get('community_tg_label', '万人交流群'),
+            'product_validity_days' => $settings->get('product_validity_days', 60),
+            'product_min_validity_days' => $settings->get('product_min_validity_days', 30),
+            'product_long_term_note' => $settings->get('product_long_term_note', '本站主售 30 天以上长效接码号，常规库存约 60 天有效。'),
             'herosms_base_url' => $settings->get('herosms_base_url', config('sms.herosms.base_url')),
             'pricing_exchange_rate' => $settings->get('pricing_exchange_rate', config('sms.pricing.exchange_rate')),
             'pricing_markup_multiplier' => $settings->get('pricing_markup_multiplier', config('sms.pricing.markup_multiplier')),

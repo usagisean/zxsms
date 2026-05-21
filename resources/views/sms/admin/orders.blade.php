@@ -1,6 +1,6 @@
 @extends('sms.admin.layout')
 @section('title','接码订单')
-@section('subtitle','查看接码订单、HeroSMS activation、支付状态和验证码结果。')
+@section('subtitle','查看接码订单、库存发货、支付状态和验证码结果。')
 @section('content')
 <div class="card">
     <form class="grid3">

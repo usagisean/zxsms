@@ -48,12 +48,16 @@ Route::prefix('sms-admin')->name('sms.admin.')->middleware('sms.admin')->group(f
     Route::post('/countries/{country}', [SmsAdminController::class, 'saveCountry'])->name('countries.save');
     Route::get('/prices', [SmsAdminController::class, 'prices'])->name('prices');
     Route::post('/prices/sync', [SmsAdminController::class, 'syncPrices'])->name('prices.sync');
+    Route::get('/inventory', [SmsAdminController::class, 'inventory'])->name('inventory');
+    Route::post('/inventory/import', [SmsAdminController::class, 'importInventory'])->name('inventory.import');
+    Route::post('/inventory/sync', [SmsAdminController::class, 'syncInventory'])->name('inventory.sync');
     Route::get('/home-slides', [SmsAdminController::class, 'homeSlides'])->name('home-slides');
     Route::post('/home-slides', [SmsAdminController::class, 'createHomeSlide'])->name('home-slides.create');
     Route::post('/home-slides/{slide}', [SmsAdminController::class, 'saveHomeSlide'])->name('home-slides.save');
     Route::get('/recharge-plans', [SmsAdminController::class, 'rechargePlans'])->name('recharge-plans');
     Route::post('/recharge-plans', [SmsAdminController::class, 'createRechargePlan'])->name('recharge-plans.create');
     Route::post('/recharge-plans/{plan}', [SmsAdminController::class, 'saveRechargePlan'])->name('recharge-plans.save');
+    Route::get('/users', [SmsAdminController::class, 'users'])->name('users');
     Route::get('/recharges', [SmsAdminController::class, 'recharges'])->name('recharges');
     Route::get('/wallet-logs', [SmsAdminController::class, 'walletLogs'])->name('wallet-logs');
     Route::get('/orders', [SmsAdminController::class, 'orders'])->name('orders');

@@ -256,7 +256,7 @@ class SmsPaymentService
             'out_trade_no' => $payment->payment_sn,
             'return_url' => route('sms.pay.yipay.return', ['payment_sn' => $payment->payment_sn]),
             'notify_url' => route('sms.pay.yipay.notify'),
-            'name' => 'HeroSMS ' . $order->service_code . '-' . $order->country_code,
+            'name' => 'ZXAIHUB SMS 接码 ' . $order->service_code . '-' . $order->country_code,
             'money' => (float) $payment->amount,
             'sign_type' => 'MD5',
         ];

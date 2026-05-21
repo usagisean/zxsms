@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'provider' => env('SMS_PROVIDER', 'inventory'),
+
     'locale' => [
         'default' => env('SMS_DEFAULT_LOCALE', 'zh_CN'),
         'supported' => [
@@ -15,6 +17,14 @@ return [
         'timeout' => (int) env('HEROSMS_TIMEOUT', 15),
         'lang' => env('HEROSMS_SERVICE_LANG', 'cn'),
         'price_currency' => env('HEROSMS_PRICE_CURRENCY', 'USD'),
+    ],
+
+    'us62' => [
+        'api_key' => env('US62_API_KEY'),
+        'base_url' => env('US62_BASE_URL', 'https://api.62-us.com'),
+        'timeout' => (int) env('US62_TIMEOUT', 15),
+        'default_country' => (int) env('US62_DEFAULT_COUNTRY', 1),
+        'default_endday' => (int) env('US62_DEFAULT_ENDDAY', 60),
     ],
 
     'pricing' => [

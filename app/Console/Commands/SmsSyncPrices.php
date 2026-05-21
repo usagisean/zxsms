@@ -8,7 +8,7 @@ use Illuminate\Console\Command;
 class SmsSyncPrices extends Command
 {
     protected $signature = 'sms:sync-prices {--service=} {--country=}';
-    protected $description = '同步 HeroSMS 国家、服务和价格';
+    protected $description = '同步接码商品国家、服务和价格';
 
     public function handle(SmsPriceService $prices)
     {

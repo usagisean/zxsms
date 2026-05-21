@@ -14,7 +14,7 @@
                 <td class="mono">{{ $c->provider_id }}</td>
                 <td><b>{{ $c->name }}</b><br><span class="muted">{{ $c->name_en }}</span></td>
                 <td>
-                    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center"><label class="check"><input form="{{ $formId }}" type="checkbox" name="is_enabled" value="1" @if($c->is_enabled) checked @endif> 启用</label><span class="badge">HeroSMS可见：{{ $c->provider_visible ? '是':'否' }}</span></div>
+                    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center"><label class="check"><input form="{{ $formId }}" type="checkbox" name="is_enabled" value="1" @if($c->is_enabled) checked @endif> 启用</label><span class="badge">前台可见：{{ $c->provider_visible ? '是':'否' }}</span></div>
                     <div class="rule-grid">
                         <input form="{{ $formId }}" name="markup_multiplier" value="{{ $c->markup_multiplier }}" placeholder="覆盖加价倍数">
                         <input form="{{ $formId }}" name="fixed_fee" value="{{ $c->fixed_fee }}" placeholder="覆盖固定费">
