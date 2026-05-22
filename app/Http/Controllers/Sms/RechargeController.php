@@ -48,8 +48,36 @@ class RechargeController extends Controller
 
         try {
             $recharge = $this->recharges->create($request->user(), $data['plan_id'], $data['payment_method']);
+            if ($request->expectsJson() || $request->ajax()) {
+                $method = $this->payments->getMethod($recharge->method_code);
+                $statusKey = 'sms.status.' . $recharge->status;
+                $statusText = __($statusKey);
+                if ($statusText === $statusKey) {
+                    $statusText = $recharge->status;
+                }
+
+                return response()->json([
+                    'ok' => true,
+                    'order' => [
+                        'recharge_sn' => $recharge->recharge_sn,
+                        'amount' => (float) $recharge->amount,
+                        'total_amount' => (float) $recharge->total_amount,
+                        'method_code' => $recharge->method_code,
+                        'method_name' => $method['name'] ?? $recharge->method_code,
+                        'driver' => $recharge->driver,
+                        'status' => $recharge->status,
+                        'status_text' => $statusText,
+                        'expires_at' => optional($recharge->expires_at)->toDateTimeString(),
+                        'show_url' => route('sms.recharge.show', ['token' => $recharge->token]),
+                        'payment_url' => route('sms.pay.recharge.gateway', ['paymentSn' => $recharge->payment_sn]),
+                    ],
+                ]);
+            }
             return redirect()->route('sms.recharge.show', ['token' => $recharge->token]);
         } catch (RuntimeException $e) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['ok' => false, 'message' => $e->getMessage()], 422);
+            }
             return back()->withInput()->withErrors(['recharge' => $e->getMessage()]);
         }
     }
