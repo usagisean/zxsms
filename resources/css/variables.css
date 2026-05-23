@@ -32,7 +32,7 @@
   --border-accent: rgba(124, 58, 237, 0.3);
 
   /* Layout */
-  --max-width: 1200px;
+  --max-width: 9999px;
   --nav-height: 80px;
   --radius-sm: 8px;
   --radius-md: 16px;
