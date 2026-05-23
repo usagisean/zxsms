@@ -117,6 +117,7 @@
                         <div class="modal-kicker">{{ __('sms.recharge.show_eyebrow') }}</div>
                         <h2>{{ __('sms.recharge.modal_title') }}</h2>
                         <p>{{ __('sms.recharge.modal_sub') }}</p>
+                        <div class="modal-reuse-note" data-modal-reuse-note hidden>{{ __('sms.recharge.reused_pending') }}</div>
                         <div class="modal-order-sn mono" data-modal-sn>RC----</div>
                         <div class="modal-summary-grid">
                             <div><span>{{ __('sms.recharge.pay_amount') }}</span><b data-modal-pay>¥--</b></div>
@@ -228,6 +229,8 @@
         modal.querySelector('[data-modal-status]').textContent = order.status_text || order.status || '--';
         modal.querySelector('[data-modal-deadline]').textContent = order.expires_at ? '{{ __('sms.recharge.pay_before', ['time' => '__TIME__']) }}'.replace('__TIME__', order.expires_at) : '';
         modal.querySelector('[data-modal-pay-link]').href = order.payment_url || order.show_url || '#';
+        const reuseNote = modal.querySelector('[data-modal-reuse-note]');
+        if (reuseNote) reuseNote.hidden = !order.reused;
     }
 
     planCards.forEach(card => card.addEventListener('click', () => updatePlan(card)));

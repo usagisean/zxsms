@@ -67,6 +67,7 @@ class RechargeController extends Controller
                         'driver' => $recharge->driver,
                         'status' => $recharge->status,
                         'status_text' => $statusText,
+                        'reused' => (bool) ($recharge->reused_pending ?? false),
                         'expires_at' => optional($recharge->expires_at)->toDateTimeString(),
                         'show_url' => route('sms.recharge.show', ['token' => $recharge->token]),
                         'payment_url' => route('sms.pay.recharge.gateway', ['paymentSn' => $recharge->payment_sn]),

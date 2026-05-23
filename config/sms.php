@@ -45,6 +45,7 @@ return [
 
     'recharge' => [
         'expire_minutes' => (int) env('SMS_RECHARGE_EXPIRE_MINUTES', 15),
+        'reuse_pending' => filter_var(env('SMS_RECHARGE_REUSE_PENDING', true), FILTER_VALIDATE_BOOLEAN),
         'default_plans' => [
             ['name' => '体验包', 'amount' => 20, 'bonus_amount' => 0, 'badge' => '适合测试', 'sort_order' => 10],
             ['name' => '常用包', 'amount' => 50, 'bonus_amount' => 2, 'badge' => '推荐', 'sort_order' => 20],

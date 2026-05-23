@@ -280,7 +280,7 @@ class SmsPaymentService
             'sign_type' => 'MD5',
         ];
         $parameter['sign'] = $this->yipaySign($parameter, $method['merchant_secret']);
-        $payment->update(['request_payload' => $this->safePayload($parameter)]);
+        $payment->update(['request_payload' => $this->withGatewayOpenedMeta($this->safePayload($parameter))]);
 
         return $this->autoSubmitForm($method['merchant_key'], $parameter);
     }
@@ -303,13 +303,18 @@ class SmsPaymentService
             'sign_type' => 'MD5',
         ];
         $parameter['sign'] = $this->yipaySign($parameter, $method['merchant_secret']);
-        $recharge->update(['request_payload' => $this->safePayload($parameter)]);
+        $recharge->update(['request_payload' => $this->withGatewayOpenedMeta($this->safePayload($parameter))]);
 
         return $this->autoSubmitForm($method['merchant_key'], $parameter);
     }
 
     private function epusdtGateway(SmsPaymentOrder $payment, array $method)
     {
+        $cachedUrl = $this->cachedPaymentUrl($payment->request_payload);
+        if ($cachedUrl) {
+            return redirect()->away($cachedUrl);
+        }
+
         if (empty($method['endpoint_url'])) {
             throw new RuntimeException('Epusdt 配置不完整：endpoint_url');
         }
@@ -325,7 +330,6 @@ class SmsPaymentService
             'notify_url' => route('sms.pay.epusdt.notify'),
         ];
         $parameter['signature'] = $this->epusdtSign($parameter, $epusdtKey);
-        $payment->update(['request_payload' => $this->safePayload($parameter)]);
 
         $client = new Client(['headers' => ['Content-Type' => 'application/json'], 'http_errors' => false, 'timeout' => 15]);
         $response = $client->post($method['endpoint_url'], ['body' => json_encode($parameter, JSON_UNESCAPED_UNICODE)]);
@@ -337,11 +341,17 @@ class SmsPaymentService
         if (empty($body['data']['payment_url'])) {
             throw new RuntimeException('Epusdt 未返回支付地址');
         }
+        $payment->update(['request_payload' => $this->withGatewayOpenedMeta($this->safePayload($parameter), $body['data']['payment_url'])]);
         return redirect()->away($body['data']['payment_url']);
     }
 
     private function epusdtRechargeGateway(SmsRechargeOrder $recharge, array $method)
     {
+        $cachedUrl = $this->cachedPaymentUrl($recharge->request_payload);
+        if ($cachedUrl) {
+            return redirect()->away($cachedUrl);
+        }
+
         if (empty($method['endpoint_url'])) {
             throw new RuntimeException('Epusdt 配置不完整：endpoint_url');
         }
@@ -357,7 +367,6 @@ class SmsPaymentService
             'notify_url' => route('sms.pay.epusdt.notify'),
         ];
         $parameter['signature'] = $this->epusdtSign($parameter, $epusdtKey);
-        $recharge->update(['request_payload' => $this->safePayload($parameter)]);
 
         $client = new Client(['headers' => ['Content-Type' => 'application/json'], 'http_errors' => false, 'timeout' => 15]);
         $response = $client->post($method['endpoint_url'], ['body' => json_encode($parameter, JSON_UNESCAPED_UNICODE)]);
@@ -369,7 +378,25 @@ class SmsPaymentService
         if (empty($body['data']['payment_url'])) {
             throw new RuntimeException('Epusdt 未返回支付地址');
         }
+        $recharge->update(['request_payload' => $this->withGatewayOpenedMeta($this->safePayload($parameter), $body['data']['payment_url'])]);
         return redirect()->away($body['data']['payment_url']);
+    }
+
+    private function cachedPaymentUrl($payload)
+    {
+        if (! is_array($payload)) {
+            return null;
+        }
+        return ! empty($payload['payment_url']) ? $payload['payment_url'] : null;
+    }
+
+    private function withGatewayOpenedMeta(array $payload, $paymentUrl = null)
+    {
+        $payload['gateway_opened_at'] = now()->toDateTimeString();
+        if ($paymentUrl) {
+            $payload['payment_url'] = $paymentUrl;
+        }
+        return $payload;
     }
 
     private function autoSubmitForm($action, array $parameter)

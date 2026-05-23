@@ -618,6 +618,16 @@ body.modal-open {
   font-size: 0.86rem;
 }
 
+.modal-reuse-note {
+  border: 1px solid rgba(34, 211, 238, 0.18);
+  border-radius: 16px;
+  padding: 0.7rem 0.78rem;
+  color: #a5f3fc;
+  background: rgba(34, 211, 238, 0.08);
+  font-size: 0.86rem;
+  margin-bottom: 0.8rem;
+}
+
 .modal-actions {
   display: grid;
   grid-template-columns: 0.82fr 1.18fr;

@@ -41,6 +41,41 @@ class SmsRechargeService
         $method = $this->payments->getMethod($methodCode);
 
         return DB::transaction(function () use ($user, $plan, $methodCode, $method) {
+            if (config('sms.recharge.reuse_pending', true)) {
+                // 已经拉起过第三方支付的待支付订单，过期前优先复用，避免反复创建/拉起新扫码单触发风控。
+                $openedPending = SmsRechargeOrder::where('user_id', $user->id)
+                    ->where('status', SmsRechargeOrder::STATUS_PENDING)
+                    ->whereNotNull('request_payload')
+                    ->where(function ($query) {
+                        $query->whereNull('expires_at')->orWhere('expires_at', '>', Carbon::now());
+                    })
+                    ->orderByDesc('id')
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($openedPending) {
+                    $openedPending->reused_pending = true;
+                    return $openedPending;
+                }
+
+                // 未拉起支付时，同一用户、同一档位、同一支付方式的待支付单也复用。
+                $matchingPending = SmsRechargeOrder::where('user_id', $user->id)
+                    ->where('plan_id', $plan->id)
+                    ->where('method_code', $methodCode)
+                    ->where('status', SmsRechargeOrder::STATUS_PENDING)
+                    ->where(function ($query) {
+                        $query->whereNull('expires_at')->orWhere('expires_at', '>', Carbon::now());
+                    })
+                    ->orderByDesc('id')
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($matchingPending) {
+                    $matchingPending->reused_pending = true;
+                    return $matchingPending;
+                }
+            }
+
             return SmsRechargeOrder::create([
                 'user_id' => $user->id,
                 'plan_id' => $plan->id,
