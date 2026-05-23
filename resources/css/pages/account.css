@@ -1,9 +1,4 @@
 /* Account / My Numbers page */
-.account-page .footer-enhanced,
-.account-page .chat-float {
-  display: none;
-}
-
 .account-page main {
   min-height: calc(100vh - var(--nav-height));
 }

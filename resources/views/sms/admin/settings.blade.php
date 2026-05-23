@@ -46,7 +46,7 @@
                 <details class="subcard payment-method" @if($method['enabled']) open @endif>
                     <summary>
                         <span><b>{{ $method['name'] }}</b><small>{{ $code }} / {{ $method['driver'] }}</small></span>
-                        <em>{{ $method['enabled'] ? '已启用' : '未启用' }}</em>
+                        <em>{{ $method['enabled'] ? (($method['_configured'] ?? false) ? '已启用' : '配置不完整') : '未启用' }}</em>
                     </summary>
                     <div class="payment-fields">
                         <label class="check"><input type="checkbox" name="payment_{{ $code }}_enabled" value="1" @if($method['enabled']) checked @endif> 启用此支付方式</label>
@@ -55,7 +55,7 @@
                             <div class="form-row"><label>商户ID / API Key</label><input name="payment_{{ $code }}_merchant_id" value="{{ $method['merchant_id'] ?? '' }}"></div>
                             <div class="form-row"><label>网关 URL / merchant_key</label><input name="payment_{{ $code }}_merchant_key" value="{{ $method['merchant_key'] ?? '' }}"></div>
                             <div class="form-row"><label>接口地址 endpoint_url</label><input name="payment_{{ $code }}_endpoint_url" value="{{ $method['endpoint_url'] ?? '' }}"></div>
-                            <div class="form-row"><label>密钥 merchant_secret</label><input name="payment_{{ $code }}_merchant_secret" value="" placeholder="留空不修改"></div>
+                            <div class="form-row"><label>密钥 merchant_secret</label><input name="payment_{{ $code }}_merchant_secret" value="" placeholder="{{ ($method['_secret_configured'] ?? false) ? '已保存，留空不修改' : '未配置，必须填写一次' }}"></div>
                         </div>
                     </div>
                 </details>

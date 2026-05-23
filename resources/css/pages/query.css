@@ -1,9 +1,4 @@
 /* Order Lookup page */
-.query-page .footer-enhanced,
-.query-page .chat-float {
-  display: none;
-}
-
 .query-page main {
   min-height: calc(100vh - var(--nav-height));
 }

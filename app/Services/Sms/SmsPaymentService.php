@@ -239,6 +239,23 @@ class SmsPaymentService
                 $method[$field] = $settings->get($meta[0], $method[$field] ?? null);
             }
         }
+        if (($method['driver'] ?? '') === 'yipay') {
+            foreach (['merchant_id', 'merchant_key', 'merchant_secret'] as $field) {
+                if (! empty($method[$field])) {
+                    continue;
+                }
+                foreach (['alipay', 'wxpay'] as $sharedCode) {
+                    $sharedKey = 'payment_' . $sharedCode . '_' . $field;
+                    if ($settings->has($sharedKey)) {
+                        $sharedValue = $settings->get($sharedKey);
+                        if (! empty($sharedValue)) {
+                            $method[$field] = $sharedValue;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
         return $method;
     }
 

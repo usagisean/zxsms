@@ -562,8 +562,34 @@ class SmsAdminController extends Controller
                     $method[$field] = $settings->get($key, $method[$field] ?? null);
                 }
             }
+            $secretKey = 'payment_' . $code . '_merchant_secret';
+            $secretConfigured = ! empty($settings->get($secretKey, $method['merchant_secret'] ?? null));
+            $method['_secret_configured'] = $secretConfigured;
+            if (($method['driver'] ?? '') === 'yipay') {
+                $method['_configured'] = ! empty($method['merchant_id']) && ! empty($method['merchant_key']) && $secretConfigured;
+            } elseif (($method['driver'] ?? '') === 'epusdt') {
+                $method['_configured'] = ! empty($method['endpoint_url']) && ($secretConfigured || ! empty($method['merchant_id']));
+            } else {
+                $method['_configured'] = true;
+            }
         }
         unset($method);
+        $sharedYipaySecret = false;
+        foreach (['alipay', 'wxpay'] as $code) {
+            if (! empty($methods[$code]['_secret_configured'])) {
+                $sharedYipaySecret = true;
+                break;
+            }
+        }
+        if ($sharedYipaySecret) {
+            foreach (['alipay', 'wxpay'] as $code) {
+                if (! isset($methods[$code])) {
+                    continue;
+                }
+                $methods[$code]['_secret_configured'] = true;
+                $methods[$code]['_configured'] = ! empty($methods[$code]['merchant_id']) && ! empty($methods[$code]['merchant_key']);
+            }
+        }
         return $methods;
     }
 

@@ -193,10 +193,10 @@ return [
     ],
     'recharge' => [
         'title' => '余额充值 - ZXAIHUB SMS', 'eyebrow' => '💳 账户充值', 'headline' => '选择金额，立即充值', 'sub' => '购买号码从账户余额扣款；库存不足、发货失败或未发货会自动退回到你的余额。',
-        'checkout_hint' => '选择充值档位和支付方式，点击创建订单后会在本页弹出确认窗口，继续支付即可。',
+        'checkout_hint' => '选择充值金额，点击创建订单后在弹窗里选择支付方式并确认，支付成功自动入账余额。',
         'current_balance' => '当前余额', 'total_recharged' => '累计充值', 'total_refunded' => '累计退回', 'choose_plan' => '选择充值金额', 'no_plans' => '暂无启用充值档位，请到后台配置。', 'bonus' => '赠送 ¥:amount', 'create_order' => '创建充值订单', 'creating_order' => '正在创建订单...', 'create_failed' => '充值订单创建失败，请稍后重试。', 'recent' => '最近充值', 'no_records' => '暂无充值记录。',
         'no_methods' => '暂无启用支付方式，请先在后台或 .env 配置易支付 / USDT。', 'recharge_order' => '充值单', 'pay_amount' => '支付金额', 'credit_amount' => '到账金额',
-        'modal_title' => '充值订单已创建', 'modal_sub' => '确认金额无误后继续支付，支付成功会自动入账到余额。', 'continue_pay' => '继续支付', 'change_selection' => '返回修改',
+        'confirm_title' => '确认充值', 'confirm_sub' => '选择支付方式后创建充值订单。订单创建后会直接显示继续支付入口。', 'select_payment_method' => '选择支付方式', 'modal_title' => '充值订单已创建', 'modal_sub' => '确认金额无误后继续支付，支付成功会自动入账到余额。', 'continue_pay' => '继续支付', 'change_selection' => '返回修改',
         'show_title' => '充值订单 :sn - ZXAIHUB SMS', 'show_eyebrow' => '💳 充值订单', 'pay_before' => '请在 :time 前完成支付。', 'paid_credited' => '已支付并入账：:time', 'go_get_number' => '去获取号码', 'unpayable' => '该充值订单已不可支付，请重新创建。', 'retry' => '重新充值',
     ],
     'account' => [

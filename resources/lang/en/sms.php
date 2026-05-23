@@ -193,10 +193,10 @@ return [
     ],
     'recharge' => [
         'title' => 'Top Up Balance - ZXAIHUB SMS', 'eyebrow' => '💳 Account Top Up', 'headline' => 'Choose amount and top up', 'sub' => 'In balance mode, buying a number deducts from your account balance. If no code arrives within 20 minutes, or there is no stock/provider failure, the amount is refunded to your balance.',
-        'checkout_hint' => 'Choose an amount and payment method. The order confirmation opens in this page, then you can continue to payment.',
+        'checkout_hint' => 'Choose an amount, then select the payment method in the confirmation modal. Successful payments are credited automatically.',
         'current_balance' => 'Current Balance', 'total_recharged' => 'Total Top-up', 'total_refunded' => 'Total Refunded', 'choose_plan' => 'Choose amount', 'no_plans' => 'No enabled top-up plan. Please configure it in admin.', 'bonus' => 'Bonus ¥:amount', 'create_order' => 'Create top-up order', 'creating_order' => 'Creating order...', 'create_failed' => 'Failed to create top-up order. Please try again.', 'recent' => 'Recent Top-ups', 'no_records' => 'No top-up records.',
         'no_methods' => 'No payment method is enabled. Configure Yipay / USDT in admin or .env first.', 'recharge_order' => 'Top-up No.', 'pay_amount' => 'Pay Amount', 'credit_amount' => 'Credit Amount',
-        'modal_title' => 'Top-up order created', 'modal_sub' => 'Confirm the amount and continue to payment. Balance will be credited automatically after payment.', 'continue_pay' => 'Continue to Pay', 'change_selection' => 'Change selection',
+        'confirm_title' => 'Confirm top-up', 'confirm_sub' => 'Choose a payment method and create the top-up order. The payment button appears immediately after creation.', 'select_payment_method' => 'Select payment method', 'modal_title' => 'Top-up order created', 'modal_sub' => 'Confirm the amount and continue to payment. Balance will be credited automatically after payment.', 'continue_pay' => 'Continue to Pay', 'change_selection' => 'Change selection',
         'show_title' => 'Top-up Order :sn - ZXAIHUB SMS', 'show_eyebrow' => '💳 Top-up Order', 'pay_before' => 'Please complete payment before :time.', 'paid_credited' => 'Paid and credited at: :time', 'go_get_number' => 'Get Number', 'unpayable' => 'This top-up order is no longer payable. Please create a new one.', 'retry' => 'Top Up Again',
     ],
     'account' => [

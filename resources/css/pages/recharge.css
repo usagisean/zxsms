@@ -1,9 +1,4 @@
 /* Recharge Page Specific */
-.recharge-page .footer-enhanced,
-.recharge-page .chat-float {
-  display: none;
-}
-
 .recharge-page main {
   min-height: calc(100vh - var(--nav-height));
 }
@@ -68,7 +63,6 @@
 .recharge-copy,
 .wallet-snapshot,
 .recharge-primary,
-.pay-method-panel,
 .recharge-checkout-bar {
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 22px;
@@ -165,7 +159,7 @@
 }
 
 .recharge-primary,
-.pay-method-panel {
+.recharge-modal-card .modal-method-block {
   padding: 0.76rem;
 }
 
@@ -313,15 +307,22 @@
   font-weight: 760;
 }
 
-.pay-method-panel {
-  display: grid;
-  align-content: start;
-}
-
 .method-compact-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.55rem;
+}
+
+.modal-method-block {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.025);
+  margin-top: 0.78rem;
+}
+
+.modal-method-block h3 {
+  margin: 0 0 0.62rem;
+  font-size: 1rem;
 }
 
 .method-chip {
@@ -453,6 +454,10 @@
   font-size: 0.85rem;
 }
 
+.modal-form-error {
+  margin-top: 0.75rem;
+}
+
 .recent-inline {
   display: inline-grid;
   justify-self: start;
@@ -509,6 +514,10 @@ body.modal-open {
   display: grid;
   place-items: center;
   padding: 1rem;
+}
+
+.recharge-card > .recharge-modal {
+  z-index: 1000;
 }
 
 .recharge-modal-backdrop {
@@ -674,7 +683,6 @@ body.modal-open {
   .recharge-copy,
   .wallet-snapshot,
   .recharge-primary,
-  .pay-method-panel,
   .recharge-checkout-bar { padding: 0.65rem; }
   .recharge-copy h1 { font-size: clamp(1.65rem, 2.45vw, 2.42rem); margin-bottom: 0.42rem; }
   .recharge-copy p { font-size: 0.82rem; line-height: 1.38; }
@@ -699,9 +707,6 @@ body.modal-open {
   .wallet-snapshot > strong {
     margin: 0;
   }
-  .method-compact-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 @media (max-width: 760px) {
@@ -722,7 +727,6 @@ body.modal-open {
   .recharge-copy,
   .wallet-snapshot,
   .recharge-primary,
-  .pay-method-panel,
   .recharge-checkout-bar,
   .recharge-modal-card,
   .recharge-detail-card {
