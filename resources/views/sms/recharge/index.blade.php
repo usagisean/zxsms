@@ -62,13 +62,7 @@
             </section>
 
             <div class="recharge-checkout-bar">
-                <div class="checkout-total">
-                    <span>{{ __('sms.recharge.pay_amount') }}</span>
-                    <b data-pay-preview>{{ $firstPlan ? '¥'.number_format((float)$firstPlan->amount, 2) : '¥--' }}</b>
-                    <small>{{ __('sms.recharge.credit_amount') }} <em data-arrive-preview>{{ $firstPlan ? '¥'.number_format((float)$firstPlan->total_amount, 2) : '¥--' }}</em></small>
-                </div>
                 <button class="btn btn-primary recharge-submit" type="button" @if($plans->isEmpty() || empty($methods)) disabled @endif data-open-recharge-modal>{{ __('sms.recharge.create_order') }}</button>
-                <div class="checkout-after"><span>{{ __('sms.recharge.current_balance') }} + {{ __('sms.recharge.credit_amount') }}</span><b data-after-preview>{{ $firstPlan ? '¥'.number_format((float)$wallet->balance + (float)$firstPlan->total_amount, 2) : '¥--' }}</b></div>
             </div>
 
             <div class="recharge-form-error" data-recharge-error hidden></div>
@@ -95,9 +89,16 @@
                             @else
                                 <div class="method-compact-grid modal-method-grid">
                                     @foreach($methods as $code => $method)
-                                        <label class="method-chip @if($loop->first) is-selected @endif" data-method-card data-method-name="{{ $method['name'] }}" data-method-driver="{{ $method['driver'] }}">
+                                        @php($paymentIcon = $method['icon'] ?: $method['name'])
+                                        <label class="method-chip @if($loop->first) is-selected @endif" data-method-card data-method-code="{{ $code }}" data-method-name="{{ $method['name'] }}" data-method-driver="{{ $method['driver'] }}">
                                             <input type="radio" name="payment_method" value="{{ $code }}" @if($loop->first) checked @endif>
-                                            <span class="method-icon">{{ mb_substr($method['name'], 0, 1) }}</span>
+                                            <span class="method-icon">
+                                                @if(!empty($method['icon_image']))
+                                                    <img src="{{ $method['icon_image'] }}" alt="{{ $method['name'] }}">
+                                                @else
+                                                    {{ mb_substr($paymentIcon, 0, 2) }}
+                                                @endif
+                                            </span>
                                             <span><b>{{ $method['name'] }}</b><small>{{ $method['driver'] }}</small></span>
                                         </label>
                                     @endforeach
@@ -108,7 +109,7 @@
                         <div class="recharge-form-error modal-form-error" data-modal-error hidden></div>
 
                         <div class="modal-actions single-action">
-                            <button class="btn btn-primary" type="submit" @if($plans->isEmpty() || empty($methods)) disabled @endif data-submit-text="{{ __('sms.recharge.create_order') }}" data-loading-text="{{ __('sms.recharge.creating_order') }}">{{ __('sms.recharge.create_order') }}</button>
+                            <button class="btn btn-primary" type="submit" @if($plans->isEmpty() || empty($methods)) disabled @endif data-submit-text="{{ __('sms.recharge.place_order') }}" data-loading-text="{{ __('sms.recharge.placing_order') }}">{{ __('sms.recharge.place_order') }}</button>
                         </div>
                     </div>
 
@@ -143,9 +144,6 @@
     const form = document.querySelector('[data-recharge-form]');
     const planCards = Array.from(document.querySelectorAll('[data-plan-card]'));
     const methodCards = Array.from(document.querySelectorAll('[data-method-card]'));
-    const payPreview = document.querySelector('[data-pay-preview]');
-    const arrivePreview = document.querySelector('[data-arrive-preview]');
-    const afterPreview = document.querySelector('[data-after-preview]');
     const creditPreview = document.querySelector('[data-credit-preview]');
     const modalPreviewPay = document.querySelector('[data-modal-preview-pay]');
     const modalPreviewCredit = document.querySelector('[data-modal-preview-credit]');
@@ -172,9 +170,6 @@
         selectCard(planCards, card);
         const amount = Number(card.dataset.amount || 0);
         const credit = Number(card.dataset.credit || amount);
-        if (payPreview) payPreview.textContent = money(amount);
-        if (arrivePreview) arrivePreview.textContent = money(credit);
-        if (afterPreview) afterPreview.textContent = money(balance + credit);
         if (creditPreview) creditPreview.textContent = '到账 ' + money(credit);
         if (modalPreviewPay) modalPreviewPay.textContent = money(amount);
         if (modalPreviewCredit) modalPreviewCredit.textContent = money(credit);

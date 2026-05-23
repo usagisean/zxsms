@@ -96,7 +96,7 @@ class SmsAdminController extends Controller
 
         foreach (array_keys(config('sms.payments', [])) as $code) {
             $settings->set('payment_' . $code . '_enabled', $request->boolean('payment_' . $code . '_enabled'), 'bool', false, 'payment');
-            foreach (['pay_check', 'merchant_id', 'merchant_key', 'endpoint_url'] as $field) {
+            foreach (['pay_check', 'merchant_id', 'merchant_key', 'endpoint_url', 'icon', 'icon_image'] as $field) {
                 $key = 'payment_' . $code . '_' . $field;
                 if ($request->has($key)) {
                     $settings->set($key, $request->input($key), 'string', false, 'payment');
@@ -556,7 +556,7 @@ class SmsAdminController extends Controller
     {
         $methods = config('sms.payments', []);
         foreach ($methods as $code => &$method) {
-            foreach (['enabled', 'pay_check', 'merchant_id', 'merchant_key', 'endpoint_url'] as $field) {
+            foreach (['enabled', 'pay_check', 'merchant_id', 'merchant_key', 'endpoint_url', 'icon', 'icon_image'] as $field) {
                 $key = 'payment_' . $code . '_' . $field;
                 if ($settings->has($key)) {
                     $method[$field] = $settings->get($key, $method[$field] ?? null);

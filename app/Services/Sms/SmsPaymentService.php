@@ -233,6 +233,8 @@ class SmsPaymentService
             'merchant_secret' => ['payment_' . $code . '_merchant_secret', 'string'],
             'endpoint_url' => ['payment_' . $code . '_endpoint_url', 'string'],
             'pay_check' => ['payment_' . $code . '_pay_check', 'string'],
+            'icon' => ['payment_' . $code . '_icon', 'string'],
+            'icon_image' => ['payment_' . $code . '_icon_image', 'string'],
         ];
         foreach ($map as $field => $meta) {
             if ($settings->has($meta[0])) {

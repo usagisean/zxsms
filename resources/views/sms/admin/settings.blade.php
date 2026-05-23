@@ -56,6 +56,8 @@
                             <div class="form-row"><label>网关 URL / merchant_key</label><input name="payment_{{ $code }}_merchant_key" value="{{ $method['merchant_key'] ?? '' }}"></div>
                             <div class="form-row"><label>接口地址 endpoint_url</label><input name="payment_{{ $code }}_endpoint_url" value="{{ $method['endpoint_url'] ?? '' }}"></div>
                             <div class="form-row"><label>密钥 merchant_secret</label><input name="payment_{{ $code }}_merchant_secret" value="" placeholder="{{ ($method['_secret_configured'] ?? false) ? '已保存，留空不修改' : '未配置，必须填写一次' }}"></div>
+                            <div class="form-row"><label>前台标识 icon</label><input name="payment_{{ $code }}_icon" value="{{ $method['icon'] ?? '' }}" placeholder="支 / 微 / ₮"></div>
+                            <div class="form-row"><label>图标 URL icon_image</label><input name="payment_{{ $code }}_icon_image" value="{{ $method['icon_image'] ?? '' }}" placeholder="可选，填图片地址则优先显示图片"></div>
                         </div>
                     </div>
                 </details>
