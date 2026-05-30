@@ -207,5 +207,8 @@ return [
     'error' => [
         'title' => '操作失败 - ZXAIHUB SMS', 'eyebrow' => '⚠️ 操作失败', 'headline' => '暂时无法继续', 'back' => '返回获取号码',
     ],
-    'footer' => ['desc' => '独立接码站 · 余额充值 / 自动接码 / 自动退款'],
+    'footer' => [
+        'desc' => '独立接码站 · 余额充值 / 自动接码 / 自动退款',
+        'support_community' => '支持与社区',
+    ],
 ];

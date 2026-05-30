@@ -10,6 +10,7 @@
     $productValidityDays = (int) $smsSettings->get('product_validity_days', 60);
     $productMinValidityDays = (int) $smsSettings->get('product_min_validity_days', 30);
     $productLongTermNote = $smsSettings->get('product_long_term_note', __('sms.landing.long_term_default'));
+    $assetVersion = @filemtime(public_path('css/app.css')) ?: '1';
 @endphp
 <!doctype html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -20,7 +21,7 @@
     <meta name="description" content="{{ __('sms.meta_description') }}">
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     <link rel="shortcut icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
-    <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ time() }}">
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ $assetVersion }}">
 </head>
 <body class="@yield('body_class')">
 <header class="topbar">
@@ -117,7 +118,7 @@
                     <a href="{{ route('sms.query') }}">{{ __('sms.nav.query') }}</a>
                 </div>
                 <div class="link-col">
-                    <h4>支持与社区</h4>
+                    <h4>{{ __('sms.footer.support_community') }}</h4>
                     @if($supportTgUrl)<a href="{{ $supportTgUrl }}" target="_blank" rel="noopener">{{ $supportTgLabel }}</a>@endif
                     @if($communityTgUrl)<a href="{{ $communityTgUrl }}" target="_blank" rel="noopener">{{ $communityTgLabel }}</a>@endif
                 </div>

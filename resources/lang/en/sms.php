@@ -207,5 +207,8 @@ return [
     'error' => [
         'title' => 'Action Failed - ZXAIHUB SMS', 'eyebrow' => '⚠️ Action Failed', 'headline' => 'Unable to continue', 'back' => 'Back to Get Number',
     ],
-    'footer' => ['desc' => 'Independent SMS platform · Balance top-up / Auto number / Auto refund'],
+    'footer' => [
+        'desc' => 'Independent SMS platform · Balance top-up / Auto number / Auto refund',
+        'support_community' => 'Support & Community',
+    ],
 ];

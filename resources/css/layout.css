@@ -332,10 +332,16 @@
   padding-top: 2rem;
   border-top: 1px solid var(--border-light);
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
+  text-align: center;
   color: var(--text-muted);
   font-size: 0.75rem;
+}
+
+.footer-enhanced .footer-bottom p {
+  width: 100%;
+  margin: 0;
 }
 
 @media (max-width: 768px) {

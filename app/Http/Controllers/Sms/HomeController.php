@@ -4,20 +4,12 @@ namespace App\Http\Controllers\Sms;
 
 use App\Http\Controllers\Controller;
 use App\Models\Sms\SmsHomeSlide;
-use App\Services\Sms\SmsPaymentService;
-use App\Services\Sms\SmsPriceService;
 
 class HomeController extends Controller
 {
-    public function __invoke(SmsPriceService $prices, SmsPaymentService $payments)
+    public function __invoke()
     {
-        $catalog = $prices->publicCatalog();
-        $methods = $payments->enabledMethods();
-
         return view('sms.home', [
-            'catalog' => $catalog,
-            'methods' => $methods,
-            'popularServices' => array_slice($catalog['services'] ?? [], 0, 8),
             'slides' => $this->slides(),
         ]);
     }
