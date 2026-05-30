@@ -22,16 +22,16 @@ return [
     ],
     'home' => [
         'title' => 'ZXAIHUB SMS - zxaihub.com 在线接收验证码',
-        'admin_note' => '余额购买 · 站内接码',
+        'admin_note' => '长效号码 · 余额购买 · 自动交付',
         'cta_get' => '获取号码', 'cta_recharge' => '充值余额', 'cta_query' => '订单查询',
         'metric_balance' => '余额', 'metric_balance_desc' => '充值后下单',
         'metric_live' => '实时', 'metric_live_desc' => '确认库存',
         'metric_auto' => '自动', 'metric_auto_desc' => '失败退余额',
         'card_note' => '充值、购买、接码和订单查询都在站内完成，记录长期可查。',
         'slides' => [
-            ['badge' => 'ZXAIHUB SMS', 'title' => '余额充值，自动接码', 'description' => '选择平台和国家，下单前实时确认成本；扣余额后自动取号、自动等待验证码。', 'card_title' => '接码流程', 'card_value' => '4 步', 'card_description' => '充值 → 选择 → 取号 → 收码'],
-            ['badge' => '余额模式', 'title' => '未收到码，余额退回', 'description' => '库存不足、发货失败或取码异常时，系统会自动退回用户余额。', 'card_title' => '退款状态', 'card_value' => '自动', 'card_description' => '记录完整余额流水'],
-            ['badge' => '实时价格', 'title' => '实时成本，防止亏本', 'description' => '前台展示库存价，提交下单前再次确认库存和售价，价格变化会要求重新确认。', 'card_title' => '成本确认', 'card_value' => '实时', 'card_description' => '价格异常自动拦截'],
+            ['badge' => '长效接码号', 'title' => '60 天长效接码', 'description' => '主售长期可用号码，站内购买后自动交付；手机号、短信和订单记录都在账号里长期可查。', 'card_title' => '号码有效期', 'card_value' => '60 天', 'card_description' => '适合长期账号验证'],
+            ['badge' => '余额工作台', 'title' => '余额支付，自动交付', 'description' => '充值后用账户余额下单，成功后自动发放号码；库存不足、发货失败或异常会自动退回余额。', 'card_title' => '交付方式', 'card_value' => '自动', 'card_description' => '购买 → 发货 → 收码'],
+            ['badge' => '订单追踪', 'title' => '订单可查，记录可追踪', 'description' => '登录账号可查看全部号码，也可以通过下单邮箱或订单号找回记录，客服和交流群入口统一配置。', 'card_title' => '记录保存', 'card_value' => '长期', 'card_description' => '邮箱与订单号均可查询'],
         ],
     ],
 

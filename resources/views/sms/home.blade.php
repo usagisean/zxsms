@@ -8,7 +8,7 @@
             <div class="home-admin-note">{{ __('sms.home.admin_note') }}</div>
             @foreach($slides as $slide)
                 <div class="slide @if($loop->first) active @endif">
-                    <div class="home-slide" style="--slide-image:url('{{ $slide->image_url ?: asset('images/home/slide-'.$loop->iteration.'.jpg') }}')">
+                    <div class="home-slide" style="--slide-image:url('{{ $slide->image_url ?: asset('images/home/slide-'.$loop->iteration.'.webp') }}')">
                         <div class="home-slide-content">
                             <div class="eyebrow">{{ $slide->badge }}</div>
                             <h1>{{ $slide->title }}</h1>
@@ -33,8 +33,8 @@
                     </div>
                 </div>
             @endforeach
-            <div class="dots" data-carousel-dots>
-                @foreach($slides as $slide)<button class="dot @if($loop->first) active @endif" type="button"></button>@endforeach
+            <div class="carousel-dots dots" data-carousel-dots>
+                @foreach($slides as $slide)<button class="carousel-dot dot @if($loop->first) active @endif" type="button"></button>@endforeach
             </div>
         </div>
     </div>

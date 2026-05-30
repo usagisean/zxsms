@@ -22,16 +22,16 @@ return [
     ],
     'home' => [
         'title' => 'ZXAIHUB SMS - Receive verification codes online',
-        'admin_note' => 'Balance purchase · In-site SMS',
+        'admin_note' => 'Long-term numbers · Balance purchase · Auto delivery',
         'cta_get' => 'Get Number', 'cta_recharge' => 'Top Up', 'cta_query' => 'Order Lookup',
         'metric_balance' => 'Balance', 'metric_balance_desc' => 'Top up before ordering',
         'metric_live' => 'Live', 'metric_live_desc' => 'Confirm stock',
         'metric_auto' => 'Auto', 'metric_auto_desc' => 'Refund on failure',
         'card_note' => 'Top-up, purchase, SMS receiving and order lookup are all handled in-site.',
         'slides' => [
-            ['badge' => 'ZXAIHUB SMS', 'title' => 'Top up balance, receive codes automatically', 'description' => 'Choose a service and country, confirm live cost before checkout, then get a number and wait for the SMS automatically.', 'card_title' => 'SMS Flow', 'card_value' => '4 Steps', 'card_description' => 'Top up → choose → get number → receive SMS'],
-            ['badge' => 'Balance Mode', 'title' => 'No code? Refund to balance', 'description' => 'When inventory is unavailable, delivery fails, or SMS fetching has an issue, the system refunds the order to your account balance.', 'card_title' => 'Refund', 'card_value' => 'Auto', 'card_description' => 'Full wallet log retained'],
-            ['badge' => 'Live Pricing', 'title' => 'Live cost check, no stale pricing', 'description' => 'The frontend shows inventory prices. Before checkout, stock and price are checked again and changes require a new quote.', 'card_title' => 'Cost Check', 'card_value' => 'Live', 'card_description' => 'Abnormal prices are blocked'],
+            ['badge' => 'Long-term SMS', 'title' => '60-day SMS numbers', 'description' => 'We focus on long-validity numbers. After purchase, the number, messages and order history stay available inside your account.', 'card_title' => 'Validity', 'card_value' => '60 Days', 'card_description' => 'Built for long-term verification'],
+            ['badge' => 'Balance Workspace', 'title' => 'Balance payment, auto delivery', 'description' => 'Top up once and pay with account balance. Numbers are delivered automatically, and failed delivery returns balance automatically.', 'card_title' => 'Delivery', 'card_value' => 'Auto', 'card_description' => 'Buy → deliver → receive'],
+            ['badge' => 'Order Tracking', 'title' => 'Searchable orders and records', 'description' => 'View all numbers after login, or recover records with order email or order number. Support and community links are configured in admin.', 'card_title' => 'Records', 'card_value' => 'Saved', 'card_description' => 'Recover by email or order ID'],
         ],
     ],
 

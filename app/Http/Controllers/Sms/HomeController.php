@@ -29,9 +29,25 @@ class HomeController extends Controller
             return collect($this->defaultSlides());
         }
 
-        return $slides->map(function ($slide) {
+        $translated = $slides->map(function ($slide) {
             return $this->translateBundledSlide($slide);
         });
+
+        if ($this->isBundledSlideSet($slides) && $translated->count() < count($this->defaultSlides())) {
+            $used = $translated->map(function ($slide) {
+                return $this->bundledSlideIndex($slide);
+            })->filter(function ($index) {
+                return $index !== null;
+            })->values()->all();
+
+            foreach ($this->defaultSlides() as $index => $slide) {
+                if (! in_array($index, $used, true)) {
+                    $translated->push($slide);
+                }
+            }
+        }
+
+        return $translated;
     }
 
     private function defaultSlides()
@@ -43,7 +59,7 @@ class HomeController extends Controller
 
         return collect($items)->values()->map(function ($slide, $index) {
             return (object) ($slide + [
-                'image_url' => asset('images/home/slide-' . ($index + 1) . '.jpg'),
+                'image_url' => asset('images/home/slide-' . ($index + 1) . '.webp'),
                 'sort_order' => ($index + 1) * 10,
                 'is_enabled' => true,
             ]);
@@ -52,14 +68,8 @@ class HomeController extends Controller
 
     private function translateBundledSlide($slide)
     {
-        $legacyTitles = [
-            '充值余额，自动接收验证码',
-            '没收到验证码，自动退回余额',
-            '防亏本报价，不按旧价成交',
-        ];
-
-        $index = array_search($slide->title, $legacyTitles, true);
-        if ($index === false) {
+        $index = $this->bundledSlideIndex($slide);
+        if ($index === null) {
             return $slide;
         }
 
@@ -72,6 +82,53 @@ class HomeController extends Controller
             $slide->{$field} = $translated->{$field} ?? $slide->{$field};
         }
 
+        if (! $slide->image_url || $this->isBundledImage($slide->image_url)) {
+            $slide->image_url = $translated->image_url;
+        }
+
         return $slide;
+    }
+
+    private function isBundledSlideSet($slides): bool
+    {
+        if ($slides->isEmpty()) {
+            return false;
+        }
+
+        return $slides->every(function ($slide) {
+            return $this->bundledSlideIndex($slide) !== null;
+        });
+    }
+
+    private function bundledSlideIndex($slide): ?int
+    {
+        $legacyTitles = [
+            '充值余额，自动接收验证码',
+            '没收到验证码，自动退回余额',
+            '防亏本报价，不按旧价成交',
+            '余额充值，自动接码',
+            '未收到码，余额退回',
+            '实时成本，防止亏本',
+            '60 天长效接码',
+            '余额支付，自动交付',
+            '订单可查，记录可追踪',
+        ];
+
+        $index = array_search($slide->title, $legacyTitles, true);
+        if ($index !== false) {
+            return $index % 3;
+        }
+
+        if ($slide->image_url && preg_match('~/images/home/slide-(\\d+)\\.(?:jpg|jpeg|png|webp)(?:\\?.*)?$~i', $slide->image_url, $matches)) {
+            $imageIndex = (int) $matches[1] - 1;
+            return $imageIndex >= 0 && $imageIndex < 3 ? $imageIndex : null;
+        }
+
+        return null;
+    }
+
+    private function isBundledImage(string $imageUrl): bool
+    {
+        return (bool) preg_match('~/images/home/slide-\\d+\\.(?:jpg|jpeg|png|webp)(?:\\?.*)?$~i', $imageUrl);
     }
 }

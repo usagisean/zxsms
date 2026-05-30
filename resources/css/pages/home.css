@@ -26,6 +26,25 @@ body.home-page {
   box-shadow: var(--shadow-lg);
 }
 
+.home-carousel .slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 1;
+  transition: opacity 0.65s ease, transform 0.65s ease;
+}
+
+.home-carousel .slide.active {
+  opacity: 1;
+  pointer-events: auto;
+  z-index: 2;
+}
+
+.home-carousel .slide:not(.active) {
+  transform: scale(1.015);
+}
+
 .home-slide {
   position: absolute;
   inset: 0;

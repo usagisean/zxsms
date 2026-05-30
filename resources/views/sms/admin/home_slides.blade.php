@@ -1,16 +1,16 @@
 @extends('sms.admin.layout')
 @section('title','首页轮播')
-@section('subtitle','首页只保留一个简洁轮播；图片地址可填 /images/home/slide-1.jpg 或完整 URL。')
+@section('subtitle','首页只保留一个简洁轮播；图片地址可填 /images/home/slide-1.webp 或完整 URL。')
 @section('content')
 <div class="card">
     <div class="section-title"><h2>新增首页轮播</h2><span class="badge">Homepage</span></div>
-    <p class="help">如果你后面把图片上传到 <code>public/images/home/</code>，这里填 <code>/images/home/文件名.jpg</code> 即可。</p>
+    <p class="help">如果你后面把图片上传到 <code>public/images/home/</code>，这里填 <code>/images/home/文件名.webp</code> 即可。图片里不建议写字，文案由前台负责中英文切换。</p>
     <form method="post" action="{{ route('sms.admin.home-slides.create') }}" class="grid3">@csrf
         <div class="form-row"><label>角标</label><input name="badge" placeholder="ZXAIHUB SMS"></div>
-        <div class="form-row"><label>标题</label><input name="title" required placeholder="充值余额，自动接收验证码"></div>
+        <div class="form-row"><label>标题</label><input name="title" required placeholder="60 天长效接码"></div>
         <div class="form-row"><label>排序</label><input name="sort_order" value="0"></div>
         <div class="form-row" style="grid-column:1/-1"><label>描述</label><textarea name="description" rows="2"></textarea></div>
-        <div class="form-row" style="grid-column:1/-1"><label>图片地址</label><input name="image_url" placeholder="/images/home/slide-1.jpg"></div>
+        <div class="form-row" style="grid-column:1/-1"><label>图片地址</label><input name="image_url" placeholder="/images/home/slide-1.webp"></div>
         <div class="form-row"><label>卡片标题</label><input name="card_title"></div>
         <div class="form-row"><label>卡片大字</label><input name="card_value"></div>
         <div class="form-row"><label>卡片描述</label><input name="card_description"></div>
