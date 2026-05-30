@@ -28,6 +28,7 @@ $navGroups = [
     ],
     '设置' => [
         ['label'=>'站点配置','route'=>'sms.admin.settings'],
+        ['label'=>'首页轮播','route'=>'sms.admin.home-slides'],
         ['label'=>'充值档位','route'=>'sms.admin.recharge-plans'],
     ]
 ];

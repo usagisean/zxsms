@@ -22,6 +22,11 @@ class HomeController extends Controller
         }
 
         $translated = $slides->map(function ($slide) {
+            $slide = $this->applyLocalizedSlideCopy($slide);
+            if ($this->hasSlideTranslations($slide)) {
+                return $slide;
+            }
+
             return $this->translateBundledSlide($slide);
         });
 
@@ -79,6 +84,24 @@ class HomeController extends Controller
         }
 
         return $slide;
+    }
+
+    private function applyLocalizedSlideCopy($slide)
+    {
+        if (! method_exists($slide, 'localizedCopy')) {
+            return $slide;
+        }
+
+        foreach ($slide->localizedCopy(app()->getLocale()) as $field => $value) {
+            $slide->{$field} = $value;
+        }
+
+        return $slide;
+    }
+
+    private function hasSlideTranslations($slide): bool
+    {
+        return ! empty($slide->translations) && is_array($slide->translations);
     }
 
     private function isBundledSlideSet($slides): bool

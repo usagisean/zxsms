@@ -11,6 +11,14 @@
     $productMinValidityDays = (int) $smsSettings->get('product_min_validity_days', 30);
     $productLongTermNote = $smsSettings->get('product_long_term_note', __('sms.landing.long_term_default'));
     $assetVersion = @filemtime(public_path('css/app.css')) ?: '1';
+    $localeOptions = collect(config('sms.locale.supported'))->map(function ($meta, $code) {
+        return [
+            'code' => $code,
+            'label' => is_array($meta) ? ($meta['label'] ?? $code) : $meta,
+            'native' => is_array($meta) ? ($meta['native'] ?? ($meta['label'] ?? $code)) : $meta,
+            'flag' => is_array($meta) ? ($meta['flag'] ?? '') : '',
+        ];
+    })->values();
 @endphp
 <!doctype html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -42,8 +50,8 @@
                     @if(is_scalar($value))<input type="hidden" name="{{ $key }}" value="{{ $value }}">@endif
                 @endforeach
                 <select name="lang" aria-label="{{ __('sms.common.language') }}" onchange="this.form.submit()">
-                    @foreach(config('sms.locale.supported') as $code => $label)
-                        <option value="{{ $code }}" @if(app()->getLocale()===$code) selected @endif>{{ $label }}</option>
+                    @foreach($localeOptions as $locale)
+                        <option value="{{ $locale['code'] }}" @if(app()->getLocale()===$locale['code']) selected @endif>{{ trim($locale['flag'].' '.$locale['label']) }}</option>
                     @endforeach
                 </select>
             </form>
@@ -62,8 +70,8 @@
     </div>
     <div class="container mobile-menu" data-mobile-menu>
         <div class="mobile-langs">
-            @foreach(config('sms.locale.supported') as $code => $label)
-                <a href="{{ request()->fullUrlWithQuery(['lang'=>$code]) }}">{{ $label }}</a>
+            @foreach($localeOptions as $locale)
+                <a href="{{ request()->fullUrlWithQuery(['lang'=>$locale['code']]) }}">{{ trim($locale['flag'].' '.$locale['label']) }}</a>
             @endforeach
         </div>
         <a href="{{ route('sms.index') }}">{{ __('sms.nav.get_number') }}</a>

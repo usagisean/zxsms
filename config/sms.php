@@ -6,8 +6,8 @@ return [
     'locale' => [
         'default' => env('SMS_DEFAULT_LOCALE', 'zh_CN'),
         'supported' => [
-            'zh_CN' => '中文',
-            'en' => 'English',
+            'zh_CN' => ['label' => '中文', 'native' => '中文', 'flag' => '🇨🇳'],
+            'en' => ['label' => 'English', 'native' => 'English', 'flag' => '🇺🇸'],
         ],
     ],
 
